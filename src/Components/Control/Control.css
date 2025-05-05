@@ -1,0 +1,43 @@
+/* ----------FIRST SECT ---------- */
+
+.first-sect {
+  height: 100vh;
+}
+
+.first-sect .genres-bar {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.first-sect .genre-btn {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.first-sect .navigation .nav-link {
+  cursor: pointer;
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.first-sect .albums-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.first-sect .album-box {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  margin: 0.5rem;
+  width: 120px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.first-sect .album-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
