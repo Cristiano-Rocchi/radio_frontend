@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Playlist.css";
 import { Badge, Button } from "react-bootstrap";
 
@@ -16,6 +16,9 @@ const Playlist = () => {
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [savedPlaylists, setSavedPlaylists] = useState([]);
   const [expandedPlaylists, setExpandedPlaylists] = useState([]);
+  const [activePlayer, setActivePlayer] = useState(null);
+  const audioRef = useRef(null);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
   useEffect(() => {
     if (isBuilding) {
@@ -30,6 +33,12 @@ const Playlist = () => {
       setSavedPlaylists(JSON.parse(saved));
     }
   }, []);
+
+  useEffect(() => {
+    if (activePlayer && audioRef.current) {
+      audioRef.current.play();
+    }
+  }, [currentTrackIndex]);
 
   const fetchGenres = async () => {
     try {
@@ -323,12 +332,23 @@ const Playlist = () => {
               className="saved-playlist mb-3 p-2 border rounded"
               style={{ cursor: "pointer" }}
             >
-              <div
-                className="d-flex justify-content-between align-items-center"
-                onClick={() => togglePlaylist(idx)}
-              >
-                <h6 className="mb-0">{playlist.name}</h6>
-                <p className="mb-0">Durata: {playlist.totalDuration}</p>
+              <div className="d-flex justify-content-between align-items-center">
+                <div
+                  onClick={() => togglePlaylist(idx)}
+                  style={{ flex: 1, cursor: "pointer" }}
+                >
+                  <h6 className="mb-0">{playlist.name}</h6>
+                </div>
+
+                <div className="d-flex align-items-center">
+                  <span
+                    style={{ cursor: "pointer", marginRight: "10px" }}
+                    onClick={() => setActivePlayer(playlist)}
+                  >
+                    ▶️ Play
+                  </span>
+                  <p className="mb-0">Durata: {playlist.totalDuration}</p>
+                </div>
               </div>
 
               {expandedPlaylists.includes(idx) && (
@@ -357,6 +377,71 @@ const Playlist = () => {
               )}
             </div>
           ))}
+        </div>
+      )}
+      {/* Modal per il player audio */}
+      {activePlayer && (
+        <div className="playlist-modal-overlay">
+          <div className="playlist-modal">
+            <h5>{activePlayer.name}</h5>
+            <p>Durata: {activePlayer.totalDuration}</p>
+
+            <ul className="list-group mb-3">
+              {activePlayer.tracks.map((track, index) => (
+                <li
+                  key={track.id}
+                  className={`list-group-item d-flex justify-content-between align-items-center ${
+                    index === currentTrackIndex ? "active" : ""
+                  }`}
+                >
+                  {index + 1}. {track.titolo}
+                  <Badge bg="secondary">
+                    {track.duration ? `${track.duration} sec` : "N/A"}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+
+            <div className="d-flex justify-content-center mb-3">
+              <Button
+                variant="primary"
+                className="me-2"
+                onClick={() => audioRef.current.play()}
+              >
+                ▶️ Play
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => audioRef.current.pause()}
+              >
+                ⏸️ Pause
+              </Button>
+            </div>
+
+            <Button
+              variant="danger"
+              onClick={() => {
+                audioRef.current.pause();
+                setActivePlayer(null);
+              }}
+            >
+              Chiudi
+            </Button>
+
+            {/* Audio player */}
+            <audio
+              ref={audioRef}
+              src={activePlayer.tracks[currentTrackIndex]?.presignedUrl}
+              onEnded={() => {
+                if (currentTrackIndex < activePlayer.tracks.length - 1) {
+                  setCurrentTrackIndex((prev) => prev + 1);
+                } else {
+                  // quando arriva all'ultima traccia puoi stoppare (opzionale)
+                  console.log("Playlist finita");
+                }
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
