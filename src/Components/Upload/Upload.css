@@ -1,0 +1,41 @@
+/* Upload.css */
+
+.upload-page {
+  padding: 2rem;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.upload-card {
+  width: 18%; /* 5 per riga circa */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 0.5%;
+}
+
+.upload-card h6 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.upload-card .form-group {
+  margin-bottom: 0.5rem;
+}
+
+.upload-card .mt-2 {
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.upload-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
