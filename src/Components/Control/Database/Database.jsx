@@ -99,6 +99,33 @@ const Database = () => {
     }
   };
 
+  const handleDeleteAlbum = async (albumId, albumTitle) => {
+    const confirmed = window.confirm(
+      `Sei sicuro di voler eliminare l'album "${albumTitle}"?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`http://localhost:3001/album/${albumId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Rimuovi subito dalla lista locale per aggiornare UI
+        setAlbums((prev) => prev.filter((album) => album.id !== albumId));
+        setSearchResults((prev) =>
+          prev.filter((album) => album.id !== albumId)
+        );
+        alert(`Album "${albumTitle}" eliminato con successo.`);
+      } else {
+        alert("Errore durante l'eliminazione dell'album.");
+      }
+    } catch (error) {
+      console.error("Errore nella richiesta DELETE:", error);
+      alert("Errore di rete durante l'eliminazione.");
+    }
+  };
+
   const genreFilteredAlbums = selectedGenre
     ? albums.filter((album) => album.genreId === selectedGenre.id)
     : albums;
@@ -179,9 +206,18 @@ const Database = () => {
                 {searchResults.map((album) => (
                   <div
                     key={album.id}
-                    className="album-box"
+                    className="album-box position-relative"
                     onClick={() => handleSelectAlbum(album)}
                   >
+                    <button
+                      className="delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation(); // ⚠️ Previene il click sulla scheda
+                        handleDeleteAlbum(album.id, album.title);
+                      }}
+                    >
+                      ❌
+                    </button>
                     📁 <div>{album.title}</div>
                     <small className="text-muted">{album.artist}</small>
                   </div>
@@ -203,9 +239,18 @@ const Database = () => {
               genreFilteredAlbums.map((album) => (
                 <div
                   key={album.id}
-                  className="album-box"
+                  className="album-box position-relative"
                   onClick={() => handleSelectAlbum(album)}
                 >
+                  <button
+                    className="delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation(); // ⚠️ Previene il click sulla scheda
+                      handleDeleteAlbum(album.id, album.title);
+                    }}
+                  >
+                    ❌
+                  </button>
                   📁 <div>{album.title}</div>
                   <small className="text-muted">{album.artist}</small>
                 </div>
