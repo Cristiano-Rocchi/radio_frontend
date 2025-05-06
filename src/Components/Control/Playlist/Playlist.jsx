@@ -386,21 +386,35 @@ const Playlist = () => {
             <h5>{activePlayer.name}</h5>
             <p>Durata: {activePlayer.totalDuration}</p>
 
-            <ul className="list-group mb-3">
-              {activePlayer.tracks.map((track, index) => (
-                <li
-                  key={track.id}
-                  className={`list-group-item d-flex justify-content-between align-items-center ${
-                    index === currentTrackIndex ? "active" : ""
-                  }`}
-                >
-                  {index + 1}. {track.titolo}
-                  <Badge bg="secondary">
-                    {track.duration ? `${track.duration} sec` : "N/A"}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
+            <div className="tracks-columns mb-3">
+              {Array.from(
+                { length: Math.ceil(activePlayer.tracks.length / 5) },
+                (_, colIndex) => (
+                  <div key={colIndex} className="tracks-column">
+                    {activePlayer.tracks
+                      .slice(colIndex * 5, colIndex * 5 + 5)
+                      .map((track, index) => {
+                        const globalIndex = colIndex * 5 + index;
+                        return (
+                          <div
+                            key={track.id}
+                            className={`track-box ${
+                              globalIndex === currentTrackIndex ? "active" : ""
+                            }`}
+                          >
+                            <div className="track-title">
+                              {globalIndex + 1}. {track.titolo}
+                            </div>
+                            <div className="track-duration">
+                              {track.duration ? `${track.duration} sec` : "N/A"}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )
+              )}
+            </div>
 
             <div className="d-flex justify-content-center mb-3">
               <Button
