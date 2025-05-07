@@ -103,6 +103,17 @@ const Home = () => {
     return skulls;
   };
 
+  // Trova le tracce precedente e successiva
+  const previousTrack =
+    selectedPlaylistIndex !== null &&
+    currentTrackIndex > 0 &&
+    playlists[selectedPlaylistIndex].tracks[currentTrackIndex - 1];
+
+  const nextTrack =
+    selectedPlaylistIndex !== null &&
+    currentTrackIndex < playlists[selectedPlaylistIndex].tracks.length - 1 &&
+    playlists[selectedPlaylistIndex].tracks[currentTrackIndex + 1];
+
   return (
     <>
       <Container fluid className="home-container">
@@ -111,6 +122,7 @@ const Home = () => {
             <div className="card-home position-relative">
               <img className="first" src={Homeimg} alt="" />
               <img src={Homeimg2} className="second" alt="" />
+              {/* SEZIONE INFO */}
               <div className="info position-absolute d-flex flex-column justify-content-between ">
                 <div className="mt-4">
                   <h1 className="text-center ">
@@ -127,46 +139,78 @@ const Home = () => {
                     {albumInfo ? albumInfo.date : "Data"}
                   </h2>
                 </div>
-                <div className="mb-4">
-                  <h3 className="ms-2">
-                    Hidden Gem: {currentTrack ? currentTrack.level : "⭐"}
-                  </h3>
+                <div className="mb-4 bar-wrapper">
+                  <h3 className="ms-4">Hidden Gem Level</h3>
                   {/* Barra Hidden Gem */}
                   {currentTrack && (
-                    <div className="hidden-gem-bar-wrapper ms-2 mt-2">
-                      <div
-                        className="hidden-gem-bar-fill"
-                        style={{
-                          width: `${currentTrack.level}%`,
-                        }}
-                      ></div>
-                      {/* Barra rossa solo SE level < 100 */}
-                      {currentTrack.level < 100 && (
+                    <div className="d-flex align-items-center ms-4 mt-2 mb-5">
+                      <div className="hidden-gem-bar-wrapper me-3">
                         <div
-                          className="hidden-gem-bar-red"
+                          className="hidden-gem-bar-fill"
                           style={{
-                            left: `${currentTrack.level}%`,
-                            width: `${100 - currentTrack.level}%`,
+                            width: `${currentTrack.level}%`,
                           }}
                         ></div>
-                      )}
+                        {currentTrack.level < 100 && (
+                          <div
+                            className="hidden-gem-bar-red"
+                            style={{
+                              left: `${currentTrack.level}%`,
+                              width: `${100 - currentTrack.level}%`,
+                            }}
+                          ></div>
+                        )}
+                      </div>
+                      <span>{currentTrack.level} %</span>
                     </div>
                   )}
-                  <h3 className="ms-2">
-                    Rating: {currentTrack ? currentTrack.rating : "Rating"}
-                  </h3>
+
+                  <h3 className="ms-4">Rating</h3>
                   {/* Stelle Rating */}
                   {currentTrack && (
-                    <div className="rating-skulls ms-2 mt-2">
-                      {renderSkulls(currentTrack.rating)}
+                    <div className="rating-skulls ms-4 mt-2">
+                      {renderSkulls(currentTrack.rating)}{" "}
+                      <span>
+                        {currentTrack ? currentTrack.rating : "Rating"}
+                      </span>
                     </div>
                   )}
                 </div>
+              </div>
+              {/* SEZIONE TRACK INDEX */}
+              <div className="track-index position-absolute d-flex justify-content-between gap-5 align-items-center">
+                {/* Previous track */}
+                {previousTrack ? (
+                  <div className="m-3">
+                    <h5 className="text-center">Next</h5>
+                    <h4>{previousTrack.titolo}</h4>
+                  </div>
+                ) : (
+                  <h4></h4> // vuoto se non esiste
+                )}
+
+                {/* Animazione */}
+                <div className="song-animation d-flex align-items-end">
+                  {[...Array(13)].map((_, idx) => (
+                    <div key={idx} className="bar"></div>
+                  ))}
+                </div>
+
+                {/* Next track */}
+                {nextTrack ? (
+                  <div className="m-3">
+                    <h5 className="text-center">Next</h5>
+                    <h4>{nextTrack.titolo}</h4>
+                  </div>
+                ) : (
+                  <h4></h4> // vuoto se non esiste
+                )}
               </div>
             </div>
           </Col>
         </Row>
         <Row>
+          {/* SEZIONE PLAYLIST */}
           <Col xs={12}>
             <div className="playlist-home">
               {playlists.map((playlist, idx) => (

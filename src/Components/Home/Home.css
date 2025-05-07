@@ -15,6 +15,7 @@
   width: 40vw;
 }
 
+/* ------SEZIONE INFO------- */
 .info {
   background-color: rgba(48, 21, 91, 0.404);
 
@@ -24,6 +25,11 @@
   height: 90vh;
   right: 0;
   width: 33vw;
+}
+
+/* RATING E LEVEL */
+.bar-wrapper span {
+  font-size: 24px;
 }
 .hidden-gem-bar-wrapper {
   position: relative;
@@ -53,7 +59,7 @@
 }
 
 .rating-skulls .skull {
-  font-size: 30px;
+  font-size: 28px;
   margin-right: 3px;
   transition: filter 0.3s ease, opacity 0.3s ease;
 }
@@ -63,12 +69,67 @@
   filter: drop-shadow(0 0 6px lime) brightness(1.5);
 }
 
-/* Teschio mezza (mezzo illuminato - un po' più tenue) */
-.rating-skulls .skull.half {
-  filter: drop-shadow(0 0 4px lime) brightness(1.1) opacity(0.6);
-}
-
 /* Teschio vuoto (spento) */
 .rating-skulls .skull.empty {
   opacity: 0.3;
+}
+
+/* ------SEZIONE TRACK INDEX-------*/
+
+.track-index {
+  bottom: 0;
+  width: 65vw;
+}
+.track-index h4 {
+  font-size: 20px;
+}
+.track-index h5 {
+  font-size: 16px;
+}
+
+.song-animation {
+  display: flex;
+  gap: 3px;
+  height: 30px;
+  position: relative;
+  bottom: -30px;
+}
+
+.song-animation .bar {
+  width: 30px;
+  background: #d04c9a;
+  animation: bounce 0.8s infinite alternate;
+}
+
+/* Creiamo animazioni sfalsate per ogni barra */
+.song-animation .bar:nth-child(1) {
+  animation-delay: 0s;
+}
+.song-animation .bar:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.song-animation .bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.song-animation .bar:nth-child(4) {
+  animation-delay: 0.6s;
+}
+.song-animation .bar:nth-child(5) {
+  animation-delay: 0.8s;
+}
+
+@keyframes bounce {
+  from {
+    height: 5px;
+    opacity: 0.7;
+  }
+  to {
+    height: 30px;
+    opacity: 1;
+  }
+}
+
+/* ------SEZIONE PLAYLIST------- */
+.playlist-home {
+  margin-top: 100px;
 }
