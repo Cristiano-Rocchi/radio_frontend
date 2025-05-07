@@ -1,0 +1,27 @@
+.card-home {
+  height: 90vh;
+  display: flex;
+  color: white;
+}
+.card-home .first {
+  width: 79.3vw;
+  height: 90vh;
+  object-fit: cover;
+
+  filter: brightness(0.9);
+}
+.card-home .second {
+  height: 90vh;
+  width: 40vw;
+}
+
+.info {
+  background-color: rgba(48, 21, 91, 0.404);
+
+  backdrop-filter: blur(15px);
+  border-radius: 10px;
+
+  height: 90vh;
+  right: 0;
+  width: 33vw;
+}
