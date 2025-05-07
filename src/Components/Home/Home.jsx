@@ -81,6 +81,28 @@ const Home = () => {
   const currentTrack = getCurrentTrack();
   console.log("🎵 currentTrack:", currentTrack);
 
+  const renderSkulls = (rating) => {
+    const skulls = [];
+    const skullCount = rating;
+
+    for (let i = 1; i <= 10; i++) {
+      if (i <= skullCount) {
+        skulls.push(
+          <span key={i} className="skull full">
+            💀
+          </span>
+        );
+      } else {
+        skulls.push(
+          <span key={i} className="skull empty">
+            💀
+          </span>
+        );
+      }
+    }
+    return skulls;
+  };
+
   return (
     <>
       <Container fluid className="home-container">
@@ -94,23 +116,51 @@ const Home = () => {
                   <h1 className="text-center ">
                     {currentTrack ? currentTrack.titolo : "Titolo"}
                   </h1>
-                  <h2 className="ms-4 mt-4">
-                    {albumInfo ? albumInfo.date : "Data"}
-                  </h2>
-                  <h2 className="ms-4">
+
+                  <h2 className="ms-5 mt-5">
                     {albumInfo ? albumInfo.artist : "Artista"}
+                  </h2>
+                  <h3 className="ms-5 mt-4">
+                    Album: {albumInfo ? albumInfo.title : "Album"}
+                  </h3>
+                  <h2 className="ms-5 mt-4">
+                    {albumInfo ? albumInfo.date : "Data"}
                   </h2>
                 </div>
                 <div className="mb-4">
                   <h3 className="ms-2">
-                    Album: {albumInfo ? albumInfo.title : "Album"}
+                    Hidden Gem: {currentTrack ? currentTrack.level : "⭐"}
                   </h3>
+                  {/* Barra Hidden Gem */}
+                  {currentTrack && (
+                    <div className="hidden-gem-bar-wrapper ms-2 mt-2">
+                      <div
+                        className="hidden-gem-bar-fill"
+                        style={{
+                          width: `${currentTrack.level}%`,
+                        }}
+                      ></div>
+                      {/* Barra rossa solo SE level < 100 */}
+                      {currentTrack.level < 100 && (
+                        <div
+                          className="hidden-gem-bar-red"
+                          style={{
+                            left: `${currentTrack.level}%`,
+                            width: `${100 - currentTrack.level}%`,
+                          }}
+                        ></div>
+                      )}
+                    </div>
+                  )}
                   <h3 className="ms-2">
                     Rating: {currentTrack ? currentTrack.rating : "Rating"}
                   </h3>
-                  <h3 className="ms-2">
-                    Hidden Gem: {currentTrack ? currentTrack.level : "⭐"}
-                  </h3>
+                  {/* Stelle Rating */}
+                  {currentTrack && (
+                    <div className="rating-skulls ms-2 mt-2">
+                      {renderSkulls(currentTrack.rating)}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

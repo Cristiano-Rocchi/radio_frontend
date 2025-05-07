@@ -25,3 +25,50 @@
   right: 0;
   width: 33vw;
 }
+.hidden-gem-bar-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 32px;
+  background-color: #444; /* sfondo */
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.hidden-gem-bar-fill {
+  height: 100%;
+  background-color: green;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: width 0.3s ease;
+}
+
+.hidden-gem-bar-red {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-color: red;
+}
+
+.rating-skulls .skull {
+  font-size: 30px;
+  margin-right: 3px;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+/* Teschio pieno (illuminato) */
+.rating-skulls .skull.full {
+  filter: drop-shadow(0 0 6px lime) brightness(1.5);
+}
+
+/* Teschio mezza (mezzo illuminato - un po' più tenue) */
+.rating-skulls .skull.half {
+  filter: drop-shadow(0 0 4px lime) brightness(1.1) opacity(0.6);
+}
+
+/* Teschio vuoto (spento) */
+.rating-skulls .skull.empty {
+  opacity: 0.3;
+}

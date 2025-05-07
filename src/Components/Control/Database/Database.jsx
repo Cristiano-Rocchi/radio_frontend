@@ -112,7 +112,7 @@ const Database = () => {
       });
 
       if (response.ok) {
-        // Rimuovi subito dalla lista locale per aggiornare UI
+        // Rimuovi subito dalla lista locale
         setAlbums((prev) => prev.filter((album) => album.id !== albumId));
         setSearchResults((prev) =>
           prev.filter((album) => album.id !== albumId)
@@ -127,18 +127,23 @@ const Database = () => {
     }
   };
 
-  const handleSaveSong = async (songId, rating, level) => {
-    if (rating < 0 || rating > 5) {
-      alert("Il rating deve essere tra 0 e 5.");
+  const handleSaveSong = async (songId, rating, level, title) => {
+    if (rating < 0 || rating > 10) {
+      alert("Il rating deve essere tra 0 e 10.");
       return;
     }
     if (level < 0 || level > 100) {
       alert("Il level deve essere tra 0 e 100.");
       return;
     }
+    if (!title.trim()) {
+      alert("Il titolo non può essere vuoto.");
+      return;
+    }
 
     try {
       const formData = new FormData();
+      formData.append("titolo", title); // ✅ aggiunto titolo
       formData.append("rating", rating);
       formData.append("level", level);
 
@@ -153,7 +158,7 @@ const Database = () => {
         setSelectedAlbum((prevAlbum) => ({
           ...prevAlbum,
           songs: prevAlbum.songs.map((s) =>
-            s.id === songId ? { ...s, rating, level } : s
+            s.id === songId ? { ...s, titolo: title, rating, level } : s
           ),
         }));
         // Esci dalla modalità modifica
@@ -317,17 +322,25 @@ const Database = () => {
                   editingSongs[song.id]?.editedRating ?? song.rating ?? 0;
                 const editedLevel =
                   editingSongs[song.id]?.editedLevel ?? song.level ?? 0;
+                const editedTitle =
+                  editingSongs[song.id]?.editedTitle ?? song.titolo ?? "";
 
                 const handleEditClick = () => {
                   if (isEditing) {
                     // Salva i dati
-                    handleSaveSong(song.id, editedRating, editedLevel);
+                    handleSaveSong(
+                      song.id,
+                      editedRating,
+                      editedLevel,
+                      editedTitle
+                    );
                   } else {
                     // Mette in modalità modifica
                     setEditingSongs((prev) => ({
                       ...prev,
                       [song.id]: {
                         isEditing: true,
+                        editedTitle: song.titolo ?? "",
                         editedRating: song.rating ?? 0,
                         editedLevel: song.level ?? 0,
                       },
@@ -351,17 +364,29 @@ const Database = () => {
                     className="list-group-item d-flex justify-content-between align-items-center flex-wrap"
                   >
                     <div>
-                      🎵 {song.titolo}{" "}
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editingSongs[song.id]?.editedTitle}
+                          onChange={(e) =>
+                            handleInputChange("editedTitle", e.target.value)
+                          }
+                          style={{ width: "200px", marginRight: "10px" }}
+                        />
+                      ) : (
+                        <>🎵 {song.titolo} </>
+                      )}
                       <Badge bg="secondary" className="me-2">
                         {song.duration ? `${song.duration} sec` : "Durata N/A"}
                       </Badge>
+
                       <Badge bg="info" className="me-2">
                         Rating:{" "}
                         {isEditing ? (
                           <input
                             type="number"
                             min="0"
-                            max="5"
+                            max="10"
                             value={editedRating}
                             onChange={(e) =>
                               handleInputChange("editedRating", e.target.value)
