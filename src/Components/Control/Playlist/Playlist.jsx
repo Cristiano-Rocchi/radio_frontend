@@ -143,10 +143,20 @@ const Playlist = () => {
       alert("Aggiungi almeno una traccia alla playlist!");
       return;
     }
+    if (!selectedAlbum) {
+      alert("Errore: nessun album selezionato!");
+      return;
+    }
+
     const playlistData = {
       name: playlistName,
       totalDuration: getTotalDuration(),
-      tracks: selectedTracks,
+      tracks: selectedTracks.map((track) => ({
+        ...track,
+        albumId: selectedAlbum.id,
+        rating: track.rating,
+        level: track.level,
+      })),
     };
 
     console.log("✅ Playlist salvata:", playlistData);

@@ -11,6 +11,7 @@ const Database = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [artistQuery, setArtistQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [editingSongs, setEditingSongs] = useState({});
 
   useEffect(() => {
     fetchGenres();
@@ -123,6 +124,49 @@ const Database = () => {
     } catch (error) {
       console.error("Errore nella richiesta DELETE:", error);
       alert("Errore di rete durante l'eliminazione.");
+    }
+  };
+
+  const handleSaveSong = async (songId, rating, level) => {
+    if (rating < 0 || rating > 5) {
+      alert("Il rating deve essere tra 0 e 5.");
+      return;
+    }
+    if (level < 0 || level > 100) {
+      alert("Il level deve essere tra 0 e 100.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("rating", rating);
+      formData.append("level", level);
+
+      const response = await fetch(`http://localhost:3001/song/${songId}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert("✅ Song aggiornata con successo.");
+        // Aggiorna localmente la song aggiornata dentro selectedAlbum
+        setSelectedAlbum((prevAlbum) => ({
+          ...prevAlbum,
+          songs: prevAlbum.songs.map((s) =>
+            s.id === songId ? { ...s, rating, level } : s
+          ),
+        }));
+        // Esci dalla modalità modifica
+        setEditingSongs((prev) => ({
+          ...prev,
+          [songId]: { ...prev[songId], isEditing: false },
+        }));
+      } else {
+        alert("❌ Errore durante l'aggiornamento della song.");
+      }
+    } catch (error) {
+      console.error("Errore durante la PUT:", error);
+      alert("❌ Errore di rete durante l'aggiornamento.");
     }
   };
 
@@ -267,17 +311,94 @@ const Database = () => {
           <h6>Album: {selectedAlbum.title}</h6>
           {selectedAlbum.songs && selectedAlbum.songs.length > 0 ? (
             <ul className="list-group">
-              {selectedAlbum.songs.map((song) => (
-                <li
-                  key={song.id}
-                  className="list-group-item d-flex justify-content-between align-items-center"
-                >
-                  🎵 {song.titolo}
-                  <Badge bg="secondary">
-                    {song.duration ? `${song.duration} sec` : "Durata N/A"}
-                  </Badge>
-                </li>
-              ))}
+              {selectedAlbum.songs.map((song) => {
+                const isEditing = editingSongs[song.id]?.isEditing || false;
+                const editedRating =
+                  editingSongs[song.id]?.editedRating ?? song.rating ?? 0;
+                const editedLevel =
+                  editingSongs[song.id]?.editedLevel ?? song.level ?? 0;
+
+                const handleEditClick = () => {
+                  if (isEditing) {
+                    // Salva i dati
+                    handleSaveSong(song.id, editedRating, editedLevel);
+                  } else {
+                    // Mette in modalità modifica
+                    setEditingSongs((prev) => ({
+                      ...prev,
+                      [song.id]: {
+                        isEditing: true,
+                        editedRating: song.rating ?? 0,
+                        editedLevel: song.level ?? 0,
+                      },
+                    }));
+                  }
+                };
+
+                const handleInputChange = (field, value) => {
+                  setEditingSongs((prev) => ({
+                    ...prev,
+                    [song.id]: {
+                      ...prev[song.id],
+                      [field]: value,
+                    },
+                  }));
+                };
+
+                return (
+                  <li
+                    key={song.id}
+                    className="list-group-item d-flex justify-content-between align-items-center flex-wrap"
+                  >
+                    <div>
+                      🎵 {song.titolo}{" "}
+                      <Badge bg="secondary" className="me-2">
+                        {song.duration ? `${song.duration} sec` : "Durata N/A"}
+                      </Badge>
+                      <Badge bg="info" className="me-2">
+                        Rating:{" "}
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            max="5"
+                            value={editedRating}
+                            onChange={(e) =>
+                              handleInputChange("editedRating", e.target.value)
+                            }
+                            style={{ width: "50px", marginLeft: "5px" }}
+                          />
+                        ) : (
+                          song.rating ?? 0
+                        )}
+                      </Badge>
+                      <Badge bg="warning" className="me-2">
+                        Level:{" "}
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editedLevel}
+                            onChange={(e) =>
+                              handleInputChange("editedLevel", e.target.value)
+                            }
+                            style={{ width: "60px", marginLeft: "5px" }}
+                          />
+                        ) : (
+                          song.level ?? 0
+                        )}
+                      </Badge>
+                    </div>
+                    <button
+                      className="btn btn-sm btn-outline-primary mt-2"
+                      onClick={handleEditClick}
+                    >
+                      {isEditing ? "Salva" : "Modifica"}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="text-muted">Nessuna traccia disponibile.</p>
