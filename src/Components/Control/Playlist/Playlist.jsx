@@ -152,10 +152,14 @@ const Playlist = () => {
       name: playlistName,
       totalDuration: getTotalDuration(),
       tracks: selectedTracks.map((track) => ({
-        ...track,
-        albumId: selectedAlbum.id,
+        id: track.id,
+        titolo: track.titolo,
+        bucketName: track.bucketName,
+        fileName: track.fileName,
+        duration: track.duration,
         rating: track.rating,
         level: track.level,
+        albumId: selectedAlbum.id,
       })),
     };
 
@@ -199,6 +203,61 @@ const Playlist = () => {
       return updated;
     });
     setExpandedPlaylists((prev) => prev.filter((i) => i !== idx)); // chiude se era aperta
+  };
+
+  const regeneratePresignedUrl = async (trackId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/song/${trackId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.presignedUrl;
+      } else {
+        console.error("Errore nel fetch presigned URL:", response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error("Errore nel fetch presigned URL:", error);
+      return null;
+    }
+  };
+
+  const handlePlayPlaylist = async (playlist) => {
+    console.log("🎧 Sto preparando la playlist:", playlist.name);
+
+    const fetchTrackFresh = async (track) => {
+      try {
+        const response = await fetch(`http://localhost:3001/song/${track.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            id: data.id,
+            titolo: data.titolo,
+            bucketName: data.bucketName,
+            fileName: data.fileName,
+            duration: data.duration,
+            rating: data.rating,
+            level: data.level,
+            presignedUrl: data.presignedUrl,
+          };
+        } else {
+          console.error("Errore nel fetch traccia:", response.status);
+          return track; // fallback ai dati esistenti se errore
+        }
+      } catch (error) {
+        console.error("Errore nel fetch traccia:", error);
+        return track; // fallback ai dati esistenti se errore
+      }
+    };
+
+    const tracksWithFreshData = await Promise.all(
+      playlist.tracks.map((track) => fetchTrackFresh(track))
+    );
+
+    setCurrentTrackIndex(0);
+    setActivePlayer({
+      ...playlist,
+      tracks: tracksWithFreshData,
+    });
   };
 
   return (
@@ -353,7 +412,7 @@ const Playlist = () => {
                 <div className="d-flex align-items-center">
                   <span
                     style={{ cursor: "pointer", marginRight: "10px" }}
-                    onClick={() => setActivePlayer(playlist)}
+                    onClick={() => handlePlayPlaylist(playlist)}
                   >
                     ▶️ Play
                   </span>

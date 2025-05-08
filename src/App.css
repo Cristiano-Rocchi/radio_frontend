@@ -1,0 +1,18 @@
+/*-----FONT-----*/
+
+@font-face {
+  font-family: "base";
+  src: url("./Assets/Font/base.ttf") format("truetype");
+}
+@font-face {
+  font-family: "rating";
+  src: url("./Assets/Font/rating.ttf") format("truetype");
+}
+@font-face {
+  font-family: "font";
+  src: url("./Assets/Font/font3.otf") format("opentype");
+}
+@font-face {
+  font-family: "data";
+  src: url("./Assets/Font/font5.otf") format("truetype");
+}

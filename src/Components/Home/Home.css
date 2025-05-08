@@ -2,6 +2,7 @@
   height: 90vh;
   display: flex;
   color: white;
+  font-family: "font", sans-serif;
 }
 .card-home .first {
   width: 79.3vw;
@@ -18,18 +19,37 @@
 /* ------SEZIONE INFO------- */
 .info {
   background-color: rgba(48, 21, 91, 0.404);
-
   backdrop-filter: blur(15px);
   border-radius: 10px;
-
   height: 90vh;
   right: 0;
   width: 33vw;
 }
+.info .data {
+  font-family: "data", "sans-serif";
+}
+
+.info h3 span {
+  background-color: #100a2e;
+  margin-right: 30px;
+  padding: 3px 20px;
+  font-size: 15px;
+  border: solid 1px #f4f4f4;
+  font-family: "base", sans-serif;
+  color: #f4f4f4;
+}
 
 /* RATING E LEVEL */
+
+.bar-wrapper h2 {
+  font-family: "rating", sans-serif;
+  letter-spacing: 4px;
+  font-size: 45px;
+}
 .bar-wrapper span {
-  font-size: 24px;
+  font-size: 30px;
+  letter-spacing: 0px;
+  font-family: "rating", sans-serif;
 }
 .hidden-gem-bar-wrapper {
   position: relative;
@@ -66,7 +86,7 @@
 
 /* Teschio pieno (illuminato) */
 .rating-skulls .skull.full {
-  filter: drop-shadow(0 0 6px lime) brightness(1.5);
+  filter: drop-shadow(0 0 6px green) brightness(1.5);
 }
 
 /* Teschio vuoto (spento) */
@@ -79,12 +99,13 @@
 .track-index {
   bottom: 0;
   width: 65vw;
+  font-family: "rating", sans-serif;
 }
 .track-index h4 {
-  font-size: 20px;
+  font-size: 30px;
 }
 .track-index h5 {
-  font-size: 16px;
+  font-size: 22px;
 }
 
 .song-animation {
@@ -97,7 +118,7 @@
 
 .song-animation .bar {
   width: 30px;
-  background: #d04c9a;
+  background: #862d7d;
   animation: bounce 0.8s infinite alternate;
 }
 

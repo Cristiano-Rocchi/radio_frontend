@@ -33,13 +33,39 @@ const Home = () => {
 
   // Riproduce automaticamente la traccia quando currentTrackIndex cambia
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && currentTrack) {
       console.log("▶️ Auto-play della nuova traccia...");
+      console.log("🎯 URL attuale:", currentTrack.presignedUrl);
       audioRef.current.play().catch((err) => {
         console.warn("⚠️ Problema nell'auto-play:", err);
       });
     }
-  }, [currentTrackIndex]);
+  }, [currentTrackIndex, playlists]);
+
+  const fetchTrackFresh = async (track) => {
+    try {
+      const response = await fetch(`http://localhost:3001/song/${track.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          ...track, // 👈 mantiene albumId, id ecc.
+          titolo: data.titolo,
+          bucketName: data.bucketName,
+          fileName: data.fileName,
+          duration: data.duration,
+          rating: data.rating,
+          level: data.level,
+          presignedUrl: data.presignedUrl,
+        };
+      } else {
+        console.error("Errore nel fetch traccia:", response.status);
+        return track; // fallback se errore
+      }
+    } catch (error) {
+      console.error("Errore nel fetch traccia:", error);
+      return track; // fallback
+    }
+  };
 
   const handleSelectPlaylist = (idx) => {
     console.log("✅ Playlist selezionata:", playlists[idx]); // 👈 AGGIUNGI QUESTO
@@ -47,10 +73,28 @@ const Home = () => {
     setCurrentTrackIndex(0); // resetta alla prima traccia
   };
 
-  const handlePlay = () => {
-    if (audioRef.current) {
-      audioRef.current.play();
-    }
+  const handlePlay = async () => {
+    if (selectedPlaylistIndex === null) return;
+
+    const selectedPlaylist = playlists[selectedPlaylistIndex];
+
+    const freshTracks = await Promise.all(
+      selectedPlaylist.tracks.map((track) => fetchTrackFresh(track))
+    );
+
+    // aggiorna la playlist selezionata con i track aggiornati
+    const updatedPlaylists = [...playlists];
+    updatedPlaylists[selectedPlaylistIndex] = {
+      ...selectedPlaylist,
+      tracks: freshTracks,
+    };
+
+    // aggiorna React state e localStorage
+    setPlaylists(updatedPlaylists);
+    localStorage.setItem("playlists", JSON.stringify(updatedPlaylists));
+
+    // ✅ Forza la riproduzione della prima traccia aggiornata
+    setCurrentTrackIndex(0);
   };
 
   const getCurrentTrack = () => {
@@ -125,22 +169,23 @@ const Home = () => {
               {/* SEZIONE INFO */}
               <div className="info position-absolute d-flex flex-column justify-content-between ">
                 <div className="mt-4">
-                  <h1 className="text-center ">
+                  <h1 className="text-center">
                     {currentTrack ? currentTrack.titolo : "Titolo"}
                   </h1>
-
-                  <h2 className="ms-5 mt-5">
-                    {albumInfo ? albumInfo.artist : "Artista"}
-                  </h2>
-                  <h3 className="ms-5 mt-4">
-                    Album: {albumInfo ? albumInfo.title : "Album"}
-                  </h3>
-                  <h2 className="ms-5 mt-4">
+                  <h2 className="text-center data">
                     {albumInfo ? albumInfo.date : "Data"}
                   </h2>
+
+                  <h3 className="ms-5 mt-5">
+                    <span>Artist:</span>
+                    {albumInfo ? albumInfo.artist : "Artista"}
+                  </h3>
+                  <h3 className="ms-5 mt-4">
+                    <span>Album:</span> {albumInfo ? albumInfo.title : "Album"}
+                  </h3>
                 </div>
                 <div className="mb-4 bar-wrapper">
-                  <h3 className="ms-4">Hidden Gem Level</h3>
+                  <h2 className="ms-4">Hidden Gem Level</h2>
                   {/* Barra Hidden Gem */}
                   {currentTrack && (
                     <div className="d-flex align-items-center ms-4 mt-2 mb-5">
@@ -165,7 +210,7 @@ const Home = () => {
                     </div>
                   )}
 
-                  <h3 className="ms-4">Rating</h3>
+                  <h2 className="ms-4">Rating</h2>
                   {/* Stelle Rating */}
                   {currentTrack && (
                     <div className="rating-skulls ms-4 mt-2">
@@ -182,7 +227,7 @@ const Home = () => {
                 {/* Previous track */}
                 {previousTrack ? (
                   <div className="m-3">
-                    <h5 className="text-center">Next</h5>
+                    <h5 className="text-center">Prev</h5>
                     <h4>{previousTrack.titolo}</h4>
                   </div>
                 ) : (
