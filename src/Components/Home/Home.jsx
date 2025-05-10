@@ -1,17 +1,46 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Home.css";
-import { Col, Container, Row } from "react-bootstrap";
+import { Button, Col, Container, Row } from "react-bootstrap";
 import Homeimg from "../../Assets/Img/home.png";
 import Homeimg2 from "../../Assets/Img/home2.png";
+import { Link, Navigate } from "react-router-dom";
+import ReactHowler from "react-howler";
 
 const Home = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   console.log("🚀 Home component montato"); // 👈 METTI QUESTO
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState(null);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [albumInfo, setAlbumInfo] = useState(null);
 
-  const audioRef = useRef(null);
+  const playerRef = useRef(null);
+  const fadeTimerRef = useRef(null);
+  const stopTimerRef = useRef(null);
+
+  // NUOVO STATO
+  const [currentTrack, setCurrentTrack] = useState(null);
+
+  // Playlist attiva e tracce prev/next
+  const currentPlaylist =
+    selectedPlaylistIndex !== null ? playlists[selectedPlaylistIndex] : null;
+
+  const currentIdx = currentPlaylist?.tracks.findIndex(
+    (t) => t.id === currentTrack?.id
+  );
+
+  const previousTrack =
+    currentPlaylist && currentIdx > 0
+      ? currentPlaylist.tracks[currentIdx - 1]
+      : null;
+
+  const nextTrack =
+    currentPlaylist &&
+    currentIdx !== null &&
+    currentIdx < currentPlaylist.tracks.length - 1
+      ? currentPlaylist.tracks[currentIdx + 1]
+      : null;
+
+  const [albumInfo, setAlbumInfo] = useState(null);
 
   // Carica le playlist dal localStorage
   useEffect(() => {
@@ -23,24 +52,17 @@ const Home = () => {
     }
   }, []);
 
-  // Carica le info dell'album quando selezioni una playlist o cambi traccia
   useEffect(() => {
-    const track = getCurrentTrack();
-    if (track && track.albumId) {
-      fetchAlbum(track.albumId);
+    if (currentTrack && currentTrack.albumId) {
+      fetchAlbum(currentTrack.albumId);
     }
-  }, [selectedPlaylistIndex, currentTrackIndex]);
-
-  // Riproduce automaticamente la traccia quando currentTrackIndex cambia
+  }, [currentTrack]);
   useEffect(() => {
-    if (audioRef.current && currentTrack) {
-      console.log("▶️ Auto-play della nuova traccia...");
-      console.log("🎯 URL attuale:", currentTrack.presignedUrl);
-      audioRef.current.play().catch((err) => {
-        console.warn("⚠️ Problema nell'auto-play:", err);
-      });
-    }
-  }, [currentTrackIndex, playlists]);
+    return () => {
+      clearTimeout(fadeTimerRef.current);
+      clearTimeout(stopTimerRef.current);
+    };
+  }, [currentTrack]);
 
   const fetchTrackFresh = async (track) => {
     try {
@@ -48,7 +70,7 @@ const Home = () => {
       if (response.ok) {
         const data = await response.json();
         return {
-          ...track, // 👈 mantiene albumId, id ecc.
+          ...track,
           titolo: data.titolo,
           bucketName: data.bucketName,
           fileName: data.fileName,
@@ -70,7 +92,6 @@ const Home = () => {
   const handleSelectPlaylist = (idx) => {
     console.log("✅ Playlist selezionata:", playlists[idx]); // 👈 AGGIUNGI QUESTO
     setSelectedPlaylistIndex(idx);
-    setCurrentTrackIndex(0); // resetta alla prima traccia
   };
 
   const handlePlay = async () => {
@@ -82,30 +103,74 @@ const Home = () => {
       selectedPlaylist.tracks.map((track) => fetchTrackFresh(track))
     );
 
-    // aggiorna la playlist selezionata con i track aggiornati
     const updatedPlaylists = [...playlists];
     updatedPlaylists[selectedPlaylistIndex] = {
       ...selectedPlaylist,
       tracks: freshTracks,
     };
-
-    // aggiorna React state e localStorage
     setPlaylists(updatedPlaylists);
     localStorage.setItem("playlists", JSON.stringify(updatedPlaylists));
 
-    // ✅ Forza la riproduzione della prima traccia aggiornata
-    setCurrentTrackIndex(0);
+    const firstTrack = freshTracks[0];
+    console.log("🎵 Avvio prima traccia:", firstTrack.titolo);
+    setCurrentTrack(firstTrack);
+    setIsPlaying(true);
   };
 
-  const getCurrentTrack = () => {
-    if (
-      selectedPlaylistIndex !== null &&
-      playlists[selectedPlaylistIndex] &&
-      playlists[selectedPlaylistIndex].tracks[currentTrackIndex]
-    ) {
-      return playlists[selectedPlaylistIndex].tracks[currentTrackIndex];
+  const handleEnded = () => {
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current);
+      fadeTimerRef.current = null;
     }
-    return null;
+    if (stopTimerRef.current) {
+      clearTimeout(stopTimerRef.current);
+      stopTimerRef.current = null;
+    }
+
+    if (!selectedPlaylistIndex) return;
+    const currentPlaylist = playlists[selectedPlaylistIndex];
+    if (!currentTrack || !currentPlaylist) return;
+
+    const currentIdx = currentPlaylist.tracks.findIndex(
+      (t) => t.id === currentTrack.id
+    );
+
+    const nextTrack = currentPlaylist.tracks[currentIdx + 1];
+    if (nextTrack) {
+      console.log("➡️ Passo alla traccia successiva:", nextTrack.titolo);
+      setCurrentTrack(nextTrack);
+      setIsPlaying(true);
+    } else {
+      console.log("✅ Playlist finita");
+      setIsPlaying(false);
+    }
+  };
+
+  const handleOnPlay = () => {
+    console.log("▶️ Traccia in riproduzione");
+
+    if (playerRef.current) {
+      const sound = playerRef.current.howler;
+      const duration = sound.duration(); // durata in sec
+      console.log(`🎵 Durata originale: ${duration}s`);
+
+      const virtualEnd = duration - 10; // tagliamo 10 sec prima della fine
+      const fadeStart = virtualEnd - 7; // fade-out inizia 7 sec prima della fine virtuale
+
+      console.log(`⏳ Fade out a: ${fadeStart}s | Stop a: ${virtualEnd}s`);
+
+      // Timer fade-out
+      fadeTimerRef.current = setTimeout(() => {
+        console.log("🔉 Avvio fade out di 7 secondi...");
+        sound.fade(1.0, 0.0, 7000); // 7 sec di fade
+      }, fadeStart * 1000);
+
+      // Timer stop + avanzamento alla prossima traccia
+      stopTimerRef.current = setTimeout(() => {
+        console.log("⏭️ Fine virtuale: passo alla prossima traccia");
+        handleEnded();
+      }, virtualEnd * 1000);
+    }
   };
 
   const fetchAlbum = async (albumId) => {
@@ -121,9 +186,6 @@ const Home = () => {
       console.error("Errore nel fetch album:", error);
     }
   };
-
-  const currentTrack = getCurrentTrack();
-  console.log("🎵 currentTrack:", currentTrack);
 
   const renderSkulls = (rating) => {
     const skulls = [];
@@ -146,17 +208,6 @@ const Home = () => {
     }
     return skulls;
   };
-
-  // Trova le tracce precedente e successiva
-  const previousTrack =
-    selectedPlaylistIndex !== null &&
-    currentTrackIndex > 0 &&
-    playlists[selectedPlaylistIndex].tracks[currentTrackIndex - 1];
-
-  const nextTrack =
-    selectedPlaylistIndex !== null &&
-    currentTrackIndex < playlists[selectedPlaylistIndex].tracks.length - 1 &&
-    playlists[selectedPlaylistIndex].tracks[currentTrackIndex + 1];
 
   return (
     <>
@@ -185,7 +236,7 @@ const Home = () => {
                   </h3>
                 </div>
                 <div className="mb-4 bar-wrapper">
-                  <h2 className="ms-4">Hidden Gem Level</h2>
+                  <h2 className="ms-4">Hidden Gem Lvl</h2>
                   {/* Barra Hidden Gem */}
                   {currentTrack && (
                     <div className="d-flex align-items-center ms-4 mt-2 mb-5">
@@ -226,10 +277,10 @@ const Home = () => {
               <div className="track-index position-absolute d-flex justify-content-between gap-5 align-items-center">
                 {/* Previous track */}
                 {previousTrack ? (
-                  <div className="m-3">
-                    <h5 className="text-center">Prev</h5>
-                    <h4>{previousTrack.titolo}</h4>
-                  </div>
+                  <h4 className="ms-4">
+                    <span>Prev</span>
+                    {previousTrack.titolo}
+                  </h4>
                 ) : (
                   <h4></h4> // vuoto se non esiste
                 )}
@@ -243,10 +294,10 @@ const Home = () => {
 
                 {/* Next track */}
                 {nextTrack ? (
-                  <div className="m-3">
-                    <h5 className="text-center">Next</h5>
-                    <h4>{nextTrack.titolo}</h4>
-                  </div>
+                  <h4 className="me-4">
+                    <span>Next</span>
+                    {nextTrack.titolo}
+                  </h4>
                 ) : (
                   <h4></h4> // vuoto se non esiste
                 )}
@@ -257,7 +308,8 @@ const Home = () => {
         <Row>
           {/* SEZIONE PLAYLIST */}
           <Col xs={12}>
-            <div className="playlist-home">
+            <div className="playlist-home border border-2">
+              <h5>Playlist disponibili</h5>
               {playlists.map((playlist, idx) => (
                 <div key={idx} className="d-flex align-items-center mb-2">
                   <input
@@ -281,23 +333,18 @@ const Home = () => {
             </div>
           </Col>
         </Row>
+        <Link to="/control">
+          <Button>Control Page</Button>
+        </Link>
 
-        {/* Audio player */}
         {currentTrack && (
-          <audio
-            ref={audioRef}
+          <ReactHowler
             src={currentTrack.presignedUrl}
-            onEnded={() => {
-              if (
-                selectedPlaylistIndex !== null &&
-                currentTrackIndex <
-                  playlists[selectedPlaylistIndex].tracks.length - 1
-              ) {
-                setCurrentTrackIndex((prev) => prev + 1);
-              } else {
-                console.log("Playlist finita");
-              }
-            }}
+            playing={isPlaying}
+            volume={1.0}
+            onPlay={handleOnPlay}
+            onEnd={handleEnded}
+            ref={playerRef}
           />
         )}
       </Container>

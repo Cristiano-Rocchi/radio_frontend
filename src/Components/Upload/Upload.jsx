@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Upload.css";
 import { Button, Form, Spinner } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 const Upload = () => {
   const [step, setStep] = useState("start"); // start | chooseGenre | uploadAlbum | uploadSong
@@ -171,6 +172,18 @@ const Upload = () => {
 
   return (
     <div className="upload-page">
+      <div className="side-navbar">
+        <div className="nav-item">
+          <Link to="/">
+            <h5>Home</h5>
+          </Link>
+        </div>
+        <div className="nav-item">
+          <Link to="/control">
+            <h5>Control</h5>
+          </Link>
+        </div>
+      </div>
       {step === "start" && (
         <div className="button-group">
           <Button onClick={() => setStep("chooseGenre")} className="me-3">

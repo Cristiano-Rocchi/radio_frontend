@@ -142,14 +142,18 @@ const Database = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("titolo", title); // ✅ aggiunto titolo
-      formData.append("rating", rating);
-      formData.append("level", level);
+      const bodyData = {
+        titolo: title,
+        rating: parseInt(rating, 10),
+        level: parseInt(level, 10),
+      };
 
       const response = await fetch(`http://localhost:3001/song/${songId}`, {
         method: "PUT",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyData),
       });
 
       if (response.ok) {
