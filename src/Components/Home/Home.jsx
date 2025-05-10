@@ -5,17 +5,21 @@ import Homeimg from "../../Assets/Img/home.png";
 import Homeimg2 from "../../Assets/Img/home2.png";
 import { Link, Navigate } from "react-router-dom";
 import ReactHowler from "react-howler";
+import StartLive from "../Home/StartLive";
 
 const Home = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  console.log("🚀 Home component montato"); // 👈 METTI QUESTO
+  console.log("🚀 Home component montato");
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState(null);
 
   const playerRef = useRef(null);
   const fadeTimerRef = useRef(null);
   const stopTimerRef = useRef(null);
+
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [pendingTrack, setPendingTrack] = useState(null);
 
   // NUOVO STATO
   const [currentTrack, setCurrentTrack] = useState(null);
@@ -97,6 +101,15 @@ const Home = () => {
   const handlePlay = async () => {
     if (selectedPlaylistIndex === null) return;
 
+    // 👉 Entra in fullscreen all'inizio
+    if (document.documentElement.requestFullscreen) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (err) {
+        console.warn("❌ Errore fullscreen:", err);
+      }
+    }
+
     const selectedPlaylist = playlists[selectedPlaylistIndex];
 
     const freshTracks = await Promise.all(
@@ -112,9 +125,19 @@ const Home = () => {
     localStorage.setItem("playlists", JSON.stringify(updatedPlaylists));
 
     const firstTrack = freshTracks[0];
-    console.log("🎵 Avvio prima traccia:", firstTrack.titolo);
-    setCurrentTrack(firstTrack);
-    setIsPlaying(true);
+
+    // Avvia il countdown
+    setPendingTrack(firstTrack);
+    setShowCountdown(true);
+  };
+
+  const handleCountdownFinish = () => {
+    setShowCountdown(false);
+    if (pendingTrack) {
+      setCurrentTrack(pendingTrack);
+      setIsPlaying(true);
+      setPendingTrack(null);
+    }
   };
 
   const handleEnded = () => {
@@ -211,7 +234,8 @@ const Home = () => {
 
   return (
     <>
-      <Container fluid className="home-container">
+      {showCountdown && <StartLive onFinish={handleCountdownFinish} />}
+      <Container fluid className="home-container p-0 m-0">
         <Row>
           <Col xs={12}>
             <div className="card-home position-relative">
@@ -332,11 +356,10 @@ const Home = () => {
               )}
             </div>
           </Col>
-        </Row>
+        </Row>{" "}
         <Link to="/control">
           <Button>Control Page</Button>
         </Link>
-
         {currentTrack && (
           <ReactHowler
             src={currentTrack.presignedUrl}

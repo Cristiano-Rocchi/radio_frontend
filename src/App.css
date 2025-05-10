@@ -16,3 +16,16 @@
   font-family: "data";
   src: url("./Assets/Font/font5.otf") format("truetype");
 }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
