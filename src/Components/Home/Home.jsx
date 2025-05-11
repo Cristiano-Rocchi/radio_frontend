@@ -6,6 +6,7 @@ import Homeimg2 from "../../Assets/Img/home2.png";
 import { Link, Navigate } from "react-router-dom";
 import ReactHowler from "react-howler";
 import StartLive from "../Home/StartLive";
+import ExitLive from "../Home/ExitLive";
 
 const Home = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -21,8 +22,8 @@ const Home = () => {
   const [showCountdown, setShowCountdown] = useState(false);
   const [pendingTrack, setPendingTrack] = useState(null);
 
-  // NUOVO STATO
   const [currentTrack, setCurrentTrack] = useState(null);
+  const [showExit, setShowExit] = useState(false);
 
   // Playlist attiva e tracce prev/next
   const currentPlaylist =
@@ -101,15 +102,6 @@ const Home = () => {
   const handlePlay = async () => {
     if (selectedPlaylistIndex === null) return;
 
-    // 👉 Entra in fullscreen all'inizio
-    if (document.documentElement.requestFullscreen) {
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch (err) {
-        console.warn("❌ Errore fullscreen:", err);
-      }
-    }
-
     const selectedPlaylist = playlists[selectedPlaylistIndex];
 
     const freshTracks = await Promise.all(
@@ -166,6 +158,7 @@ const Home = () => {
     } else {
       console.log("✅ Playlist finita");
       setIsPlaying(false);
+      setShowExit(true);
     }
   };
 
@@ -234,144 +227,141 @@ const Home = () => {
 
   return (
     <>
-      {showCountdown && <StartLive onFinish={handleCountdownFinish} />}
-      <Container fluid className="home-container p-0 m-0">
-        <Row>
-          <Col xs={12}>
-            <div className="card-home position-relative">
-              <img className="first" src={Homeimg} alt="" />
-              <img src={Homeimg2} className="second" alt="" />
-              {/* SEZIONE INFO */}
-              <div className="info position-absolute d-flex flex-column justify-content-between ">
-                <div className="mt-4 ">
-                  <h1 className="text-center">
-                    {currentTrack ? currentTrack.titolo : "Titolo"}
-                  </h1>
-                  <h2 className="text-center data">
-                    {albumInfo ? albumInfo.date : "Data"}
-                  </h2>
+      {showCountdown ? (
+        <StartLive onFinish={handleCountdownFinish} />
+      ) : showExit ? (
+        <ExitLive />
+      ) : (
+        <Container fluid className="home-container p-0 m-0">
+          <Row>
+            <Col xs={12}>
+              <div className="card-home position-relative">
+                <img className="first" src={Homeimg} alt="" />
+                <img src={Homeimg2} className="second" alt="" />
+                {/* SEZIONE INFO */}
+                <div className="info position-absolute d-flex flex-column justify-content-between ">
+                  <div className="mt-4 ">
+                    <h1 className="text-center">
+                      {currentTrack ? currentTrack.titolo : "Titolo"}
+                    </h1>
+                    <h2 className="text-center data">
+                      {albumInfo ? albumInfo.date : "Data"}
+                    </h2>
 
-                  <h3 className="ms-5 mt-5">
-                    <span>Artist:</span>
-                    {albumInfo ? albumInfo.artist : "Artista"}
-                  </h3>
-                  <h3 className="ms-5 mt-4">
-                    <span>Album:</span> {albumInfo ? albumInfo.title : "Album"}
-                  </h3>
-                </div>
-                <div className="mb-4 bar-wrapper">
-                  <h2 className="ms-4">Hidden Gem Lvl</h2>
-                  {/* Barra Hidden Gem */}
-                  {currentTrack && (
-                    <div className="d-flex align-items-center ms-4 mt-2 mb-5">
-                      <div className="hidden-gem-bar-wrapper me-3">
-                        <div
-                          className="hidden-gem-bar-fill"
-                          style={{
-                            width: `${currentTrack.level}%`,
-                          }}
-                        ></div>
-                        {currentTrack.level < 100 && (
+                    <h3 className="ms-5 mt-5">
+                      <span>Artist:</span>
+                      {albumInfo ? albumInfo.artist : "Artista"}
+                    </h3>
+                    <h3 className="ms-5 mt-4">
+                      <span>Album:</span>{" "}
+                      {albumInfo ? albumInfo.title : "Album"}
+                    </h3>
+                  </div>
+                  <div className="mb-4 bar-wrapper">
+                    <h2 className="ms-4">Hidden Gem Lvl</h2>
+                    {currentTrack && (
+                      <div className="d-flex align-items-center ms-4 mt-2 mb-5">
+                        <div className="hidden-gem-bar-wrapper me-3">
                           <div
-                            className="hidden-gem-bar-red"
-                            style={{
-                              left: `${currentTrack.level}%`,
-                              width: `${100 - currentTrack.level}%`,
-                            }}
+                            className="hidden-gem-bar-fill"
+                            style={{ width: `${currentTrack.level}%` }}
                           ></div>
-                        )}
+                          {currentTrack.level < 100 && (
+                            <div
+                              className="hidden-gem-bar-red"
+                              style={{
+                                left: `${currentTrack.level}%`,
+                                width: `${100 - currentTrack.level}%`,
+                              }}
+                            ></div>
+                          )}
+                        </div>
+                        <span>{currentTrack.level} %</span>
                       </div>
-                      <span>{currentTrack.level} %</span>
-                    </div>
-                  )}
+                    )}
+                    <h2 className="ms-4">Rating</h2>
+                    {currentTrack && (
+                      <div className="rating-skulls ms-4 mt-2">
+                        {renderSkulls(currentTrack.rating)}{" "}
+                        <span>{currentTrack.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                  <h2 className="ms-4">Rating</h2>
-                  {/* Stelle Rating */}
-                  {currentTrack && (
-                    <div className="rating-skulls ms-4 mt-2">
-                      {renderSkulls(currentTrack.rating)}{" "}
-                      <span>
-                        {currentTrack ? currentTrack.rating : "Rating"}
-                      </span>
-                    </div>
+                {/* TRACK INDEX */}
+                <div className="track-index position-absolute d-flex justify-content-between align-items-center">
+                  {previousTrack ? (
+                    <h4 className="ms-4">
+                      <span>Prev</span> {previousTrack.titolo}
+                    </h4>
+                  ) : (
+                    <h4></h4>
+                  )}
+                  {nextTrack ? (
+                    <h4 className="me-4">
+                      <span>Next</span> {nextTrack.titolo}
+                    </h4>
+                  ) : (
+                    <h4></h4>
                   )}
                 </div>
               </div>
-              {/* SEZIONE TRACK INDEX */}
-              <div className="track-index position-absolute d-flex justify-content-between align-items-center">
-                {/* Previous track */}
-                {previousTrack ? (
-                  <h4 className="ms-4">
-                    <span>Prev</span>
-                    {previousTrack.titolo}
-                  </h4>
-                ) : (
-                  <h4></h4> // vuoto se non esiste
-                )}
 
-                {/* Next track */}
-                {nextTrack ? (
-                  <h4 className="me-4">
-                    <span>Next</span>
-                    {nextTrack.titolo}
-                  </h4>
-                ) : (
-                  <h4></h4> // vuoto se non esiste
-                )}
+              <div className="animation-index position-absolute d-flex justify-content-center align-items-center">
+                <div className="song-animation d-flex align-items-end">
+                  {[...Array(13)].map((_, idx) => (
+                    <div key={idx} className="bar"></div>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="animation-index position-absolute d-flex justify-content-center align-items-center">
-              {/* Animazione */}
-              <div className="song-animation d-flex align-items-end">
-                {[...Array(13)].map((_, idx) => (
-                  <div key={idx} className="bar"></div>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col xs={12}>
+              <div className="playlist-home border border-2">
+                <h5>Playlist disponibili</h5>
+                {playlists.map((playlist, idx) => (
+                  <div key={idx} className="d-flex align-items-center mb-2">
+                    <input
+                      type="radio"
+                      name="selectedPlaylist"
+                      value={idx}
+                      checked={selectedPlaylistIndex === idx}
+                      onChange={() => handleSelectPlaylist(idx)}
+                    />
+                    <span className="ms-2">
+                      {playlist.name} ({playlist.totalDuration})
+                    </span>
+                  </div>
                 ))}
-              </div>
-            </div>
-          </Col>
-        </Row>
-        <Row>
-          {/* SEZIONE PLAYLIST */}
-          <Col xs={12}>
-            <div className="playlist-home border border-2">
-              <h5>Playlist disponibili</h5>
-              {playlists.map((playlist, idx) => (
-                <div key={idx} className="d-flex align-items-center mb-2">
-                  <input
-                    type="radio"
-                    name="selectedPlaylist"
-                    value={idx}
-                    checked={selectedPlaylistIndex === idx}
-                    onChange={() => handleSelectPlaylist(idx)}
-                  />
-                  <span className="ms-2">
-                    {playlist.name} ({playlist.totalDuration})
-                  </span>
-                </div>
-              ))}
 
-              {selectedPlaylistIndex !== null && (
-                <button className="btn btn-primary mt-3" onClick={handlePlay}>
-                  ▶️ Play
-                </button>
-              )}
-            </div>
-          </Col>
-        </Row>{" "}
-        <Link to="/control">
-          <Button>Control Page</Button>
-        </Link>
-        {currentTrack && (
-          <ReactHowler
-            src={currentTrack.presignedUrl}
-            playing={isPlaying}
-            volume={1.0}
-            onPlay={handleOnPlay}
-            onEnd={handleEnded}
-            ref={playerRef}
-          />
-        )}
-      </Container>
+                {selectedPlaylistIndex !== null && (
+                  <button className="btn btn-primary mt-3" onClick={handlePlay}>
+                    ▶️ Play
+                  </button>
+                )}
+              </div>
+            </Col>
+          </Row>
+
+          <Link to="/control">
+            <Button>Control Page</Button>
+          </Link>
+
+          {currentTrack && (
+            <ReactHowler
+              src={currentTrack.presignedUrl}
+              playing={isPlaying}
+              volume={1.0}
+              onPlay={handleOnPlay}
+              onEnd={handleEnded}
+              ref={playerRef}
+            />
+          )}
+        </Container>
+      )}
     </>
   );
 };

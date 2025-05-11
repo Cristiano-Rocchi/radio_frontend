@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../Home/StartLive.css";
 import liveImage from "../../Assets/Img/home.png";
+import introMusic from "../../Assets/Music/KRS-ONE---A-Friend-instrumental.mp3";
 
 const StartLive = ({ onFinish }) => {
-  const [timeLeft, setTimeLeft] = useState(500); // in secondi
+  const [timeLeft, setTimeLeft] = useState(50); // in secondi
 
   const phrases = [
     "Brew your Best Coffee...",
@@ -12,15 +13,18 @@ const StartLive = ({ onFinish }) => {
     "Light it up and let it ride....",
     "Smoke, sip, and stay untouchable...",
     "No talkin’, just vibin’...",
+    "This is 'A Friend' — KRS-One on the beat, instrumental style.",
   ];
 
   const typingSpeed = 60; // velocita effetto battitura
   const phraseDelay = 20000; // velocita alternanza frasi
+  const musicVolume = 0.4; //volume musica sottofondo
 
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const typingTimeoutRef = useRef(null);
   const switchTimeoutRef = useRef(null);
+  const audioIntroRef = useRef(null);
 
   // Countdown
   useEffect(() => {
@@ -35,6 +39,43 @@ const StartLive = ({ onFinish }) => {
 
     return () => clearInterval(interval);
   }, [timeLeft, onFinish]);
+
+  //musica sottofondo
+  useEffect(() => {
+    const audio = audioIntroRef.current;
+
+    if (audio && audio.paused && timeLeft > 0) {
+      audio.volume = musicVolume;
+      audio.play();
+    }
+
+    if (timeLeft === 15 && audio) {
+      let start = null;
+      const duration = 15000; // 15 secondi
+      const initialVolume = musicVolume;
+
+      const fadeOut = (timestamp) => {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const progress = Math.min(elapsed / duration, 1);
+        audio.volume = initialVolume * (1 - progress);
+
+        if (progress < 1) {
+          requestAnimationFrame(fadeOut);
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      };
+
+      requestAnimationFrame(fadeOut);
+    }
+
+    if (timeLeft <= 0 && audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  }, [timeLeft]);
 
   // Digitazione sicura (niente intervalli multipli)
   const typePhrase = (text, i = 0) => {
@@ -86,6 +127,7 @@ const StartLive = ({ onFinish }) => {
           </h3>
         </div>
       </div>
+      <audio ref={audioIntroRef} src={introMusic} loop />
     </>
   );
 };
