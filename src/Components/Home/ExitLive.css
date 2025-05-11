@@ -1,0 +1,20 @@
+.exit-text h1 {
+  color: white;
+  font-family: "rating", sans-serif;
+  letter-spacing: 3px;
+  font-size: 55px;
+}
+
+.exit-text h3 {
+  color: red;
+  font-family: "font", sans-serif;
+  letter-spacing: 1px;
+  font-size: 45px;
+}
+
+.exit-text h4 {
+  color: white;
+  font-family: "font", sans-serif;
+  letter-spacing: 1px;
+  font-size: 40px;
+}

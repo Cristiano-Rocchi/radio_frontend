@@ -51,7 +51,7 @@ const Home = () => {
     const saved = localStorage.getItem("playlists");
     if (saved) {
       const parsed = JSON.parse(saved);
-      console.log("📂 Playlist caricate dal localStorage:", parsed); // 👈 AGGIUNGI QUESTO
+      console.log("📂 Playlist caricate dal localStorage:", parsed);
       setPlaylists(parsed);
     }
   }, []);
@@ -85,16 +85,16 @@ const Home = () => {
         };
       } else {
         console.error("Errore nel fetch traccia:", response.status);
-        return track; // fallback se errore
+        return track;
       }
     } catch (error) {
       console.error("Errore nel fetch traccia:", error);
-      return track; // fallback
+      return track;
     }
   };
 
   const handleSelectPlaylist = (idx) => {
-    console.log("✅ Playlist selezionata:", playlists[idx]); // 👈 AGGIUNGI QUESTO
+    console.log("✅ Playlist selezionata:", playlists[idx]);
     setSelectedPlaylistIndex(idx);
   };
 
@@ -243,7 +243,7 @@ const Home = () => {
               <img src={Homeimg2} className="second" alt="" />
               {/* SEZIONE INFO */}
               <div className="info position-absolute d-flex flex-column justify-content-between ">
-                <div className="mt-4">
+                <div className="mt-4 ">
                   <h1 className="text-center">
                     {currentTrack ? currentTrack.titolo : "Titolo"}
                   </h1>
@@ -298,7 +298,7 @@ const Home = () => {
                 </div>
               </div>
               {/* SEZIONE TRACK INDEX */}
-              <div className="track-index position-absolute d-flex justify-content-between gap-5 align-items-center">
+              <div className="track-index position-absolute d-flex justify-content-between align-items-center">
                 {/* Previous track */}
                 {previousTrack ? (
                   <h4 className="ms-4">
@@ -309,13 +309,6 @@ const Home = () => {
                   <h4></h4> // vuoto se non esiste
                 )}
 
-                {/* Animazione */}
-                <div className="song-animation d-flex align-items-end">
-                  {[...Array(13)].map((_, idx) => (
-                    <div key={idx} className="bar"></div>
-                  ))}
-                </div>
-
                 {/* Next track */}
                 {nextTrack ? (
                   <h4 className="me-4">
@@ -325,6 +318,14 @@ const Home = () => {
                 ) : (
                   <h4></h4> // vuoto se non esiste
                 )}
+              </div>
+            </div>
+            <div className="animation-index position-absolute d-flex justify-content-center align-items-center">
+              {/* Animazione */}
+              <div className="song-animation d-flex align-items-end">
+                {[...Array(13)].map((_, idx) => (
+                  <div key={idx} className="bar"></div>
+                ))}
               </div>
             </div>
           </Col>

@@ -4,6 +4,8 @@ import Home from "./Components/Home/Home";
 import Control from "./Components/Control/Control";
 import Upload from "./Components/Upload/Upload";
 import "bootstrap/dist/css/bootstrap.min.css";
+import StartLive from "./Components/Home/StartLive";
+import ExitLive from "./Components/Home/ExitLive";
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/control" element={<Control />} />
         <Route path="/upload" element={<Upload />} />
+        <Route path="/start-live" element={<StartLive />} />
+        <Route path="/exit-live" element={<ExitLive />} />
       </Routes>
     </BrowserRouter>
   );

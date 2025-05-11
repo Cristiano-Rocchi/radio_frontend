@@ -5,6 +5,7 @@
   font-family: "font", sans-serif;
   max-width: 100vw;
 }
+
 .card-home .first {
   width: 66.42vw;
   height: 100vh;
@@ -27,8 +28,16 @@
   right: 0;
   width: 33.53vw;
 }
+
+.info h1 {
+  font-size: 50px;
+}
+.info h3 {
+  font-size: 50px;
+}
 .info .data {
   font-family: "data", "sans-serif";
+  font-size: 40px;
 }
 
 .info h3 span {
@@ -99,9 +108,9 @@
 /* ------SEZIONE TRACK INDEX-------*/
 
 .track-index {
-  bottom: 0;
+  bottom: 25px;
   width: 65vw;
-  font-family: "rating", sans-serif;
+  font-family: "font", sans-serif;
 }
 .track-index h4 {
   font-size: 30px;
@@ -117,6 +126,11 @@
   font-size: 22px;
 }
 
+.animation-index {
+  bottom: 0;
+  width: 65vw;
+  font-family: "font", sans-serif;
+}
 .song-animation {
   display: flex;
   gap: 3px;
