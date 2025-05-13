@@ -22,12 +22,12 @@ const Control = () => {
         </div>
       </div>
 
-      <Container>
+      <Container fluid>
         <Row>
-          <Col xs={12} className="border-bottom border-2 border-black">
+          {/* <Col xs={12} className="border-bottom border-2 border-black">
             <h5 className="text-center">Database</h5>
             <Database />
-          </Col>
+          </Col> */}
 
           <Col xs={12} className="border-bottom border-2 border-black">
             <h5 className="text-center">Playlist</h5>

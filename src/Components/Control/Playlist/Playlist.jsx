@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Playlist.css";
-import { Badge, Button } from "react-bootstrap";
+import { Badge, Button, Col, Container, Row } from "react-bootstrap";
 
 const Playlist = () => {
   const [isBuilding, setIsBuilding] = useState(false);
@@ -8,10 +8,13 @@ const Playlist = () => {
   const [genres, setGenres] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [songQuery, setSongQuery] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [artistQuery, setArtistQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [expandedAlbumId, setExpandedAlbumId] = useState(null);
+  const [showTrackModal, setShowTrackModal] = useState(false);
 
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [savedPlaylists, setSavedPlaylists] = useState([]);
@@ -36,13 +39,25 @@ const Playlist = () => {
       const res = await fetch("http://localhost:3001/playlist");
       if (res.ok) {
         const data = await res.json();
-        setSavedPlaylists(data);
+
+        // Pre-elabora i dati per colonna 2
+        const playlistsWithExtras = data.map((pl) => ({
+          ...pl,
+          tracks: pl.tracks.map((track) => ({
+            ...track,
+            artist: track.artist || "-", // fallback
+            albumTitle: track.albumTitle || "-", // fallback
+          })),
+        }));
+
+        setSavedPlaylists(playlistsWithExtras);
       } else {
         console.error("Errore nel fetch delle playlist:", res.status);
       }
     } catch (error) {
       console.error("Errore nel fetch delle playlist:", error);
     }
+    setExpandedPlaylists([]);
   };
 
   useEffect(() => {
@@ -50,6 +65,12 @@ const Playlist = () => {
       audioRef.current.play();
     }
   }, [currentTrackIndex]);
+
+  useEffect(() => {
+    if (selectedTracks.length === 0) {
+      setShowTrackModal(false);
+    }
+  }, [selectedTracks]);
 
   const fetchGenres = async () => {
     try {
@@ -93,6 +114,7 @@ const Playlist = () => {
   };
 
   const performSearch = async (title, artist) => {
+    setExpandedAlbumId(null);
     if (!title.trim() && !artist.trim()) {
       setSearchResults([]);
       await fetchAlbums(); // torna alla lista completa
@@ -124,15 +146,44 @@ const Playlist = () => {
 
   const handleToggleTrack = (track) => {
     const alreadySelected = selectedTracks.find((t) => t.id === track.id);
+    let updatedTracks;
     if (alreadySelected) {
-      setSelectedTracks((prev) => prev.filter((t) => t.id !== track.id));
+      updatedTracks = selectedTracks.filter((t) => t.id !== track.id);
     } else {
-      setSelectedTracks((prev) => [...prev, track]);
+      updatedTracks = [...selectedTracks, track];
     }
+
+    setSelectedTracks(updatedTracks);
+    setShowTrackModal(updatedTracks.length > 0); // mostra se c'è almeno una traccia
   };
 
   const handleRemoveTrack = (trackId) => {
     setSelectedTracks((prev) => prev.filter((t) => t.id !== trackId));
+  };
+
+  const searchSongsByTitle = async (title) => {
+    setExpandedAlbumId(null);
+    if (!title.trim()) {
+      setSelectedAlbum(null); // se il campo è vuoto, puliamo la lista
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3001/song/search?title=${encodeURIComponent(title)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedAlbum({
+          title: `Risultati per "${title}"`,
+          songs: data,
+        });
+      } else {
+        console.error("Errore nella ricerca delle canzoni:", res.status);
+      }
+    } catch (error) {
+      console.error("Errore nella ricerca delle canzoni:", error);
+    }
   };
 
   const getTotalDuration = () => {
@@ -177,7 +228,9 @@ const Playlist = () => {
         setSelectedAlbum(null);
         setSearchQuery("");
         setArtistQuery("");
+        setSongQuery("");
         setSearchResults([]);
+        setShowTrackModal(false);
       } else {
         console.error("Errore salvataggio playlist:", res.status);
       }
@@ -186,12 +239,9 @@ const Playlist = () => {
     }
   };
 
-  const togglePlaylist = (idx) => {
-    setExpandedPlaylists(
-      (prev) =>
-        prev.includes(idx)
-          ? prev.filter((i) => i !== idx) // chiudi se già aperta
-          : [...prev, idx] // apri se chiusa
+  const togglePlaylist = (id) => {
+    setExpandedPlaylists((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [id]
     );
   };
 
@@ -240,266 +290,266 @@ const Playlist = () => {
 
   return (
     <div className="playlist">
-      {!isBuilding ? (
-        <p className="add-playlist" onClick={() => setIsBuilding(true)}>
-          + aggiungi nuova playlist
-        </p>
-      ) : (
-        <div>
-          {/* Input nome playlist */}
-          <div className="mb-3">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Nome playlist..."
-              value={playlistName}
-              onChange={(e) => setPlaylistName(e.target.value)}
-            />
-          </div>
-
-          {/* Input ricerca titolo */}
-          <div className="d-flex mb-3">
-            <input
-              type="text"
-              className="form-control me-2"
-              placeholder="Cerca album per nome..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
-
-          {/* Input ricerca artista */}
-          <div className="d-flex mb-3">
-            <input
-              type="text"
-              className="form-control me-2"
-              placeholder="Cerca album per artista..."
-              value={artistQuery}
-              onChange={handleArtistSearchChange}
-            />
-          </div>
-
-          {/* Risultati ricerca */}
-          <div className="albums-container mb-4">
-            {(searchQuery.trim() !== "" || artistQuery.trim() !== ""
-              ? searchResults
-              : albums
-            ).map((album) => (
-              <div
-                key={album.id}
-                className="album-box"
-                onClick={() => handleSelectAlbum(album)}
-              >
-                📁 <div>{album.title}</div>
-                <small className="text-muted">{album.artist}</small>
+      <Container fluid>
+        <Row>
+          {/* Colonna 1: Playlist salvate */}
+          <Col xs={3} className="playlist-column-left">
+            <h5 className="text-center">Playlist Salvate</h5>
+            <p
+              className="add-playlist text-primary"
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                setIsBuilding(true);
+                setSelectedTracks([]);
+                setSelectedAlbum(null);
+              }}
+            >
+              + Aggiungi nuova playlist
+            </p>
+            {savedPlaylists.map((playlist) => (
+              <div key={playlist.id} className="d-flex align-items-center mb-2">
+                <input
+                  type="radio"
+                  name="selectedPlaylist"
+                  checked={expandedPlaylists.includes(playlist.id)}
+                  onChange={() => togglePlaylist(playlist.id)}
+                />
+                <span className="ms-2">{playlist.name}</span>
               </div>
             ))}
-          </div>
+          </Col>
 
-          {/* Tracce dell'album selezionato */}
-          {selectedAlbum && (
-            <div className="mb-4">
-              <h6>Tracce di: {selectedAlbum.title}</h6>
-              {selectedAlbum.songs && selectedAlbum.songs.length > 0 ? (
-                <ul className="list-group">
-                  {selectedAlbum.songs.map((song) => (
-                    <li
-                      key={song.id}
-                      className="list-group-item d-flex justify-content-between align-items-center"
-                    >
-                      <div>
-                        <input
-                          type="checkbox"
-                          className="form-check-input me-2"
-                          checked={selectedTracks.some((t) => t.id === song.id)}
-                          onChange={() => handleToggleTrack(song)}
-                        />
-                        🎵 {song.titolo}
-                      </div>
-                      <Badge bg="secondary">
-                        {song.duration ? `${song.duration} sec` : "Durata N/A"}
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted">Nessuna traccia disponibile.</p>
-              )}
-            </div>
-          )}
-
-          {/* Indice tracce selezionate */}
-          {selectedTracks.length > 0 && (
-            <div className="playlist-index mb-4">
-              <h6>
-                {playlistName || "Nome playlist"} - Durata: {getTotalDuration()}
-              </h6>
-              <ul className="list-group">
-                {selectedTracks.map((track, index) => (
-                  <li
-                    key={track.id}
-                    className="list-group-item d-flex justify-content-between align-items-center"
-                  >
-                    <div>
-                      {index + 1}. {track.titolo}
-                    </div>
-                    <div>
-                      <span className="me-2">
-                        {track.duration
-                          ? `${track.duration} sec`
-                          : "Durata N/A"}
-                      </span>
+          {/* Colonna 2: Tracce della playlist */}
+          <Col xs={6} className="playlist-column-center">
+            {expandedPlaylists.length > 0 &&
+              savedPlaylists
+                .filter((pl) => expandedPlaylists.includes(pl.id))
+                .map((playlist) => (
+                  <div key={playlist.id} className="saved-playlist">
+                    <div className="d-flex justify-content-start mb-2">
                       <Button
                         variant="danger"
                         size="sm"
-                        onClick={() => handleRemoveTrack(track.id)}
+                        onClick={() => handleDeletePlaylist(playlist.id)}
                       >
-                        ❌
+                        🗑️ Elimina playlist
                       </Button>
                     </div>
-                  </li>
+                    <table className="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Nome</th>
+                          <th>Artista</th>
+                          <th>Album</th>
+                          <th>Rating</th>
+                          <th>Level</th>
+                          <th>Durata</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {playlist.tracks.map((track, index) => (
+                          <tr key={track.id}>
+                            <td>{index + 1}</td>
+                            <td>{track.titolo}</td>
+                            <td>{track.albumArtist || "-"}</td>
+                            <td>{track.albumTitle || "-"}</td>
+                            <td>{track.rating}</td>
+                            <td>{track.level}</td>
+                            <td>{track.duration}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ))}
-              </ul>
-            </div>
-          )}
+          </Col>
 
-          {/* Bottone salva */}
-          <Button variant="success" onClick={handleSavePlaylist}>
-            Salva playlist
-          </Button>
-        </div>
-      )}
+          {/* Colonna 3: Builder nuova playlist */}
+          <Col xs={3} className="playlist-column-right">
+            {isBuilding && (
+              <div>
+                <input
+                  type="text"
+                  className="form-control mb-2"
+                  placeholder="Cerca per canzone..."
+                  value={songQuery}
+                  onChange={(e) => {
+                    setSongQuery(e.target.value);
+                    searchSongsByTitle(e.target.value);
+                  }}
+                />
+                <input
+                  type="text"
+                  className="form-control mb-2"
+                  placeholder="Cerca per artista..."
+                  value={artistQuery}
+                  onChange={handleArtistSearchChange}
+                />
+                <input
+                  type="text"
+                  className="form-control mb-2"
+                  placeholder="Cerca per album..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
 
-      {savedPlaylists.length > 0 && (
-        <div className="saved-playlists mt-4">
-          <h5>Playlist salvate:</h5>
-          {savedPlaylists.map((playlist) => (
-            <div key={playlist.id} className="saved-playlist">
-              <div className="d-flex justify-content-between align-items-center">
-                <div
-                  onClick={() => togglePlaylist(playlist.id)}
-                  style={{ flex: 1, cursor: "pointer" }}
-                >
-                  <h6 className="mb-0">{playlist.name}</h6>
+                <div className="albums-container mb-3">
+                  {(searchQuery.trim() !== "" || artistQuery.trim() !== "") && (
+                    <div className="albums-container mb-3">
+                      {searchResults.map((album) => (
+                        <div key={album.id} className="mb-2">
+                          <div
+                            className="album-box"
+                            onClick={() => {
+                              setExpandedAlbumId((prev) =>
+                                prev === album.id ? null : album.id
+                              );
+                              setSelectedAlbum(album);
+                            }}
+                            style={{
+                              cursor: "pointer",
+                              border: "1px solid #ccc",
+                              padding: "5px",
+                            }}
+                          >
+                            📁 {album.title} <small>({album.artist})</small>
+                          </div>
+
+                          {expandedAlbumId === album.id &&
+                            album.songs &&
+                            album.songs.length > 0 && (
+                              <ul className="list-group mt-2">
+                                {album.songs.map((song) => (
+                                  <li
+                                    key={song.id}
+                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                  >
+                                    <div>
+                                      <input
+                                        type="checkbox"
+                                        className="form-check-input me-2"
+                                        checked={selectedTracks.some(
+                                          (t) => t.id === song.id
+                                        )}
+                                        onChange={() => handleToggleTrack(song)}
+                                      />
+                                      🎵 {song.titolo}
+                                    </div>
+                                    <Badge bg="secondary">
+                                      {song.duration
+                                        ? `${song.duration} sec`
+                                        : "N/A"}
+                                    </Badge>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div className="d-flex align-items-center">
-                  <span
-                    style={{ cursor: "pointer", marginRight: "10px" }}
-                    onClick={() => handlePlayPlaylist(playlist)}
-                  >
-                    ▶️ Play
-                  </span>
-                  <p className="mb-0">Durata: {playlist.totalDuration}</p>
-                </div>
-              </div>
-
-              {expandedPlaylists.includes(playlist.id) && (
-                <div className="mt-2">
-                  <ul className="list-group mb-2">
-                    {Array.isArray(playlist.tracks) &&
-                      playlist.tracks.map((track, index) => (
+                {songQuery.trim() !== "" &&
+                  selectedAlbum &&
+                  selectedAlbum.songs &&
+                  selectedAlbum.songs.length > 0 && (
+                    <ul className="list-group mb-3">
+                      {selectedAlbum.songs.map((song) => (
                         <li
-                          key={track.id}
+                          key={song.id}
                           className="list-group-item d-flex justify-content-between align-items-center"
                         >
-                          {index + 1}. {track.titolo}
+                          <div>
+                            <input
+                              type="checkbox"
+                              className="form-check-input me-2"
+                              checked={selectedTracks.some(
+                                (t) => t.id === song.id
+                              )}
+                              onChange={() => handleToggleTrack(song)}
+                            />
+                            🎵 {song.titolo}
+                          </div>
                           <Badge bg="secondary">
-                            {track.duration ? `${track.duration} sec` : "N/A"}
+                            {song.duration ? `${song.duration} sec` : "N/A"}
                           </Badge>
                         </li>
                       ))}
-                  </ul>
+                    </ul>
+                  )}
+              </div>
+            )}
+          </Col>
+        </Row>
+      </Container>
+      {showTrackModal && (
+        <div className="track-modal">
+          <h5>Tracce selezionate</h5>
+          <p>
+            <strong>Durata:</strong> {getTotalDuration()}
+          </p>
+          <ul className="list-group mb-3">
+            {selectedTracks.map((track, index) => (
+              <li
+                key={track.id}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  {index + 1}. {track.titolo}
+                </div>
+                <div>
+                  <span className="me-2">
+                    {track.duration ? `${track.duration} sec` : "N/A"}
+                  </span>
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleDeletePlaylist(playlist.id)}
+                    onClick={() => handleRemoveTrack(track.id)}
                   >
-                    🗑️ Elimina playlist
+                    ❌
                   </Button>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      {/* Modal per il player audio */}
-      {activePlayer && (
-        <div className="playlist-modal-overlay">
-          <div className="playlist-modal">
-            <h5>{activePlayer.name}</h5>
-            <p>Durata: {activePlayer.totalDuration}</p>
+              </li>
+            ))}
+          </ul>
 
-            <div className="tracks-columns mb-3">
-              {Array.isArray(activePlayer.tracks) &&
-                Array.from({
-                  length: Math.ceil(activePlayer.tracks.length / 5),
-                }).map((_, colIndex) => (
-                  <div key={colIndex} className="tracks-column">
-                    {activePlayer.tracks
-                      .slice(colIndex * 5, colIndex * 5 + 5)
-                      .map((track, index) => {
-                        const globalIndex = colIndex * 5 + index;
-                        return (
-                          <div
-                            key={track.id}
-                            className={`track-box ${
-                              globalIndex === currentTrackIndex ? "active" : ""
-                            }`}
-                          >
-                            <div className="track-title">
-                              {globalIndex + 1}. {track.titolo}
-                            </div>
-                            <div className="track-duration">
-                              {track.duration ? `${track.duration} sec` : "N/A"}
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                ))}
-            </div>
+          <label className="form-label">Nome playlist:</label>
+          <input
+            type="text"
+            className="form-control mb-2"
+            value={playlistName}
+            onChange={(e) => setPlaylistName(e.target.value)}
+          />
 
-            <div className="d-flex justify-content-center mb-3">
-              <Button
-                variant="primary"
-                className="me-2"
-                onClick={() => audioRef.current.play()}
-              >
-                ▶️ Play
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => audioRef.current.pause()}
-              >
-                ⏸️ Pause
-              </Button>
-            </div>
-
-            <Button
-              variant="danger"
-              onClick={() => {
-                audioRef.current.pause();
-                setActivePlayer(null);
-              }}
-            >
-              Chiudi
-            </Button>
-
-            {/* Audio player */}
-            <audio
-              ref={audioRef}
-              src={activePlayer.tracks[currentTrackIndex]?.presignedUrl}
-              onEnded={() => {
-                if (currentTrackIndex < activePlayer.tracks.length - 1) {
-                  setCurrentTrackIndex((prev) => prev + 1);
-                } else {
-                  // quando arriva all'ultima traccia puoi stoppare (opzionale)
-                  console.log("Playlist finita");
-                }
-              }}
-            />
-          </div>
+          <Button
+            variant="success"
+            className="w-100"
+            onClick={handleSavePlaylist}
+          >
+            Salva
+          </Button>
+          <Button
+            variant="outline-secondary"
+            className="w-100 mt-2"
+            onClick={() => {
+              const confirm = window.confirm(
+                "Vuoi annullare la creazione della playlist?"
+              );
+              if (confirm) {
+                setSelectedTracks([]);
+                setPlaylistName("");
+                setSelectedAlbum(null);
+                setShowTrackModal(false);
+                setSongQuery("");
+                setSearchQuery("");
+                setArtistQuery("");
+              }
+            }}
+          >
+            Annulla
+          </Button>
         </div>
       )}
     </div>
