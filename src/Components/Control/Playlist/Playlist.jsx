@@ -9,6 +9,7 @@ const Playlist = () => {
   const [albums, setAlbums] = useState([]);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [songQuery, setSongQuery] = useState("");
+  const [editingSongs, setEditingSongs] = useState({});
 
   const [searchQuery, setSearchQuery] = useState("");
   const [artistQuery, setArtistQuery] = useState("");
@@ -348,17 +349,173 @@ const Playlist = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {playlist.tracks.map((track, index) => (
-                          <tr key={track.id}>
-                            <td>{index + 1}</td>
-                            <td>{track.titolo}</td>
-                            <td>{track.albumArtist || "-"}</td>
-                            <td>{track.albumTitle || "-"}</td>
-                            <td>{track.rating}</td>
-                            <td>{track.level}</td>
-                            <td>{track.duration}</td>
-                          </tr>
-                        ))}
+                        {playlist.tracks.map((track, index) => {
+                          const isEditing =
+                            editingSongs[track.id]?.isEditing || false;
+                          const editedTitle =
+                            editingSongs[track.id]?.editedTitle ?? track.titolo;
+                          const editedRating =
+                            editingSongs[track.id]?.editedRating ??
+                            track.rating ??
+                            0;
+                          const editedLevel =
+                            editingSongs[track.id]?.editedLevel ??
+                            track.level ??
+                            0;
+
+                          const handleInputChange = (field, value) => {
+                            setEditingSongs((prev) => ({
+                              ...prev,
+                              [track.id]: {
+                                ...prev[track.id],
+                                [field]: value,
+                              },
+                            }));
+                          };
+
+                          const handleEditClick = async () => {
+                            if (isEditing) {
+                              // Salva
+                              try {
+                                const body = {
+                                  titolo: editedTitle,
+                                  rating: parseInt(editedRating),
+                                  level: parseInt(editedLevel),
+                                };
+                                const response = await fetch(
+                                  `http://localhost:3001/song/${track.id}`,
+                                  {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify(body),
+                                  }
+                                );
+                                if (response.ok) {
+                                  // aggiorna localmente
+                                  setSavedPlaylists((prevPlaylists) =>
+                                    prevPlaylists.map((pl) =>
+                                      pl.id === playlist.id
+                                        ? {
+                                            ...pl,
+                                            tracks: pl.tracks.map((t) =>
+                                              t.id === track.id
+                                                ? {
+                                                    ...t,
+                                                    titolo: editedTitle,
+                                                    rating: editedRating,
+                                                    level: editedLevel,
+                                                  }
+                                                : t
+                                            ),
+                                          }
+                                        : pl
+                                    )
+                                  );
+                                  setEditingSongs((prev) => ({
+                                    ...prev,
+                                    [track.id]: {
+                                      ...prev[track.id],
+                                      isEditing: false,
+                                    },
+                                  }));
+                                } else {
+                                  alert("Errore nel salvataggio.");
+                                }
+                              } catch (err) {
+                                alert("Errore di rete.");
+                                console.error(err);
+                              }
+                            } else {
+                              // Mette in modifica
+                              setEditingSongs((prev) => ({
+                                ...prev,
+                                [track.id]: {
+                                  isEditing: true,
+                                  editedTitle: track.titolo,
+                                  editedRating: track.rating,
+                                  editedLevel: track.level,
+                                },
+                              }));
+                            }
+                          };
+
+                          return (
+                            <tr key={track.id}>
+                              <td>{index + 1}</td>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    value={editedTitle}
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        "editedTitle",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="form-control form-control-sm"
+                                  />
+                                ) : (
+                                  track.titolo
+                                )}
+                              </td>
+                              <td>{track.albumArtist || "-"}</td>
+                              <td>{track.albumTitle || "-"}</td>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    value={editedRating}
+                                    min="0"
+                                    max="10"
+                                    className="form-control form-control-sm"
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        "editedRating",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  track.rating
+                                )}
+                              </td>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    value={editedLevel}
+                                    min="0"
+                                    max="100"
+                                    className="form-control form-control-sm"
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        "editedLevel",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  track.level
+                                )}
+                              </td>
+                              <td>{track.duration}</td>
+                              <td>
+                                <Button
+                                  variant={
+                                    isEditing ? "success" : "outline-primary"
+                                  }
+                                  size="sm"
+                                  onClick={handleEditClick}
+                                >
+                                  {isEditing ? "Salva" : "Modifica"}
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
