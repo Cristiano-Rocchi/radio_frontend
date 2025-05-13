@@ -13,7 +13,7 @@ const Home = () => {
 
   console.log("🚀 Home component montato");
   const [playlists, setPlaylists] = useState([]);
-  const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState(null);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
 
   const playerRef = useRef(null);
   const fadeTimerRef = useRef(null);
@@ -27,11 +27,12 @@ const Home = () => {
 
   // Playlist attiva e tracce prev/next
   const currentPlaylist =
-    selectedPlaylistIndex !== null ? playlists[selectedPlaylistIndex] : null;
+    playlists.find((p) => p.id === selectedPlaylistId) || null;
 
-  const currentIdx = currentPlaylist?.tracks.findIndex(
-    (t) => t.id === currentTrack?.id
-  );
+  const currentIdx =
+    currentPlaylist?.tracks && Array.isArray(currentPlaylist.tracks)
+      ? currentPlaylist.tracks.findIndex((t) => t.id === currentTrack?.id)
+      : -1;
 
   const previousTrack =
     currentPlaylist && currentIdx > 0
@@ -47,15 +48,23 @@ const Home = () => {
 
   const [albumInfo, setAlbumInfo] = useState(null);
 
-  // Carica le playlist dal localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("playlists");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      console.log("📂 Playlist caricate dal localStorage:", parsed);
-      setPlaylists(parsed);
-    }
+    fetchPlaylists();
   }, []);
+
+  const fetchPlaylists = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/playlist");
+      if (res.ok) {
+        const data = await res.json();
+        setPlaylists(data);
+      } else {
+        console.error("Errore nel fetch delle playlist:", res.status);
+      }
+    } catch (error) {
+      console.error("Errore nel fetch delle playlist:", error);
+    }
+  };
 
   useEffect(() => {
     if (currentTrack && currentTrack.albumId) {
@@ -69,57 +78,25 @@ const Home = () => {
     };
   }, [currentTrack]);
 
-  const fetchTrackFresh = async (track) => {
-    try {
-      const response = await fetch(`http://localhost:3001/song/${track.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          ...track,
-          titolo: data.titolo,
-          bucketName: data.bucketName,
-          fileName: data.fileName,
-          duration: data.duration,
-          rating: data.rating,
-          level: data.level,
-          presignedUrl: data.presignedUrl,
-        };
-      } else {
-        console.error("Errore nel fetch traccia:", response.status);
-        return track;
-      }
-    } catch (error) {
-      console.error("Errore nel fetch traccia:", error);
-      return track;
+  const handleSelectPlaylist = (id) => {
+    const playlist = playlists.find((p) => p.id === id);
+    if (playlist) {
+      console.log("✅ Playlist selezionata:", playlist.name);
+      setSelectedPlaylistId(id);
+    } else {
+      console.warn("❌ Playlist non trovata con ID:", id);
     }
   };
 
-  const handleSelectPlaylist = (idx) => {
-    console.log("✅ Playlist selezionata:", playlists[idx]);
-    setSelectedPlaylistIndex(idx);
-  };
+  const handlePlay = () => {
+    if (
+      !currentPlaylist ||
+      !Array.isArray(currentPlaylist.tracks) ||
+      currentPlaylist.tracks.length === 0
+    )
+      return;
 
-  const handlePlay = async () => {
-    if (selectedPlaylistIndex === null) return;
-
-    const selectedPlaylist = playlists[selectedPlaylistIndex];
-
-    const freshTracks = await Promise.all(
-      selectedPlaylist.tracks.map((track) => fetchTrackFresh(track))
-    );
-
-    const updatedPlaylists = [...playlists];
-    updatedPlaylists[selectedPlaylistIndex] = {
-      ...selectedPlaylist,
-      tracks: freshTracks,
-    };
-    setPlaylists(updatedPlaylists);
-    localStorage.setItem("playlists", JSON.stringify(updatedPlaylists));
-
-    const firstTrack = freshTracks[0];
-
-    // Avvia il countdown
-    setPendingTrack(firstTrack);
+    setPendingTrack(currentPlaylist.tracks[0]);
     setShowCountdown(true);
   };
 
@@ -142,15 +119,20 @@ const Home = () => {
       stopTimerRef.current = null;
     }
 
-    if (!selectedPlaylistIndex) return;
-    const currentPlaylist = playlists[selectedPlaylistIndex];
+    if (!selectedPlaylistId) return;
+    const currentPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
+
     if (!currentTrack || !currentPlaylist) return;
 
     const currentIdx = currentPlaylist.tracks.findIndex(
       (t) => t.id === currentTrack.id
     );
 
-    const nextTrack = currentPlaylist.tracks[currentIdx + 1];
+    const nextTrack =
+      Array.isArray(currentPlaylist.tracks) && currentIdx >= 0
+        ? currentPlaylist.tracks[currentIdx + 1]
+        : null;
+
     if (nextTrack) {
       console.log("➡️ Passo alla traccia successiva:", nextTrack.titolo);
       setCurrentTrack(nextTrack);
@@ -322,22 +304,26 @@ const Home = () => {
             <Col xs={12}>
               <div className="playlist-home border border-2">
                 <h5>Playlist disponibili</h5>
-                {playlists.map((playlist, idx) => (
-                  <div key={idx} className="d-flex align-items-center mb-2">
+                {playlists.map((playlist) => (
+                  <div
+                    key={playlist.id}
+                    className="d-flex align-items-center mb-2"
+                  >
                     <input
                       type="radio"
                       name="selectedPlaylist"
-                      value={idx}
-                      checked={selectedPlaylistIndex === idx}
-                      onChange={() => handleSelectPlaylist(idx)}
+                      value={playlist.id}
+                      checked={selectedPlaylistId === playlist.id}
+                      onChange={() => handleSelectPlaylist(playlist.id)}
                     />
+
                     <span className="ms-2">
                       {playlist.name} ({playlist.totalDuration})
                     </span>
                   </div>
                 ))}
 
-                {selectedPlaylistIndex !== null && (
+                {selectedPlaylistId !== null && (
                   <button className="btn btn-primary mt-3" onClick={handlePlay}>
                     ▶️ Play
                   </button>

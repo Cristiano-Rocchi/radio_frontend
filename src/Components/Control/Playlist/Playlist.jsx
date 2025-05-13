@@ -28,11 +28,22 @@ const Playlist = () => {
   }, [isBuilding]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("playlists");
-    if (saved) {
-      setSavedPlaylists(JSON.parse(saved));
-    }
+    fetchSavedPlaylists();
   }, []);
+
+  const fetchSavedPlaylists = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/playlist");
+      if (res.ok) {
+        const data = await res.json();
+        setSavedPlaylists(data);
+      } else {
+        console.error("Errore nel fetch delle playlist:", res.status);
+      }
+    } catch (error) {
+      console.error("Errore nel fetch delle playlist:", error);
+    }
+  };
 
   useEffect(() => {
     if (activePlayer && audioRef.current) {
@@ -134,52 +145,45 @@ const Playlist = () => {
     return `${minutes} min ${seconds} sec`;
   };
 
-  const handleSavePlaylist = () => {
+  const handleSavePlaylist = async () => {
     if (!playlistName.trim()) {
       alert("Inserisci un nome per la playlist!");
       return;
     }
     if (selectedTracks.length === 0) {
-      alert("Aggiungi almeno una traccia alla playlist!");
-      return;
-    }
-    if (!selectedAlbum) {
-      alert("Errore: nessun album selezionato!");
+      alert("Aggiungi almeno una traccia!");
       return;
     }
 
-    const playlistData = {
+    const payload = {
       name: playlistName,
-      totalDuration: getTotalDuration(),
-      tracks: selectedTracks.map((track) => ({
-        id: track.id,
-        titolo: track.titolo,
-        bucketName: track.bucketName,
-        fileName: track.fileName,
-        duration: track.duration,
-        rating: track.rating,
-        level: track.level,
-        albumId: selectedAlbum.id,
-      })),
+      songIds: selectedTracks.map((t) => t.id),
     };
 
-    console.log("✅ Playlist salvata:", playlistData);
+    try {
+      const res = await fetch("http://localhost:3001/playlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    // Aggiunge la nuova playlist alla lista e salva in localStorage
-    setSavedPlaylists((prev) => {
-      const updated = [...prev, playlistData];
-      localStorage.setItem("playlists", JSON.stringify(updated)); // salva anche in localStorage
-      return updated;
-    });
-
-    // Reset
-    setIsBuilding(false);
-    setPlaylistName("");
-    setSelectedTracks([]);
-    setSelectedAlbum(null);
-    setSearchQuery("");
-    setArtistQuery("");
-    setSearchResults([]);
+      if (res.ok) {
+        const data = await res.json();
+        setSavedPlaylists((prev) => [...prev, data]);
+        // Reset
+        setIsBuilding(false);
+        setPlaylistName("");
+        setSelectedTracks([]);
+        setSelectedAlbum(null);
+        setSearchQuery("");
+        setArtistQuery("");
+        setSearchResults([]);
+      } else {
+        console.error("Errore salvataggio playlist:", res.status);
+      }
+    } catch (error) {
+      console.error("Errore salvataggio playlist:", error);
+    }
   };
 
   const togglePlaylist = (idx) => {
@@ -191,18 +195,26 @@ const Playlist = () => {
     );
   };
 
-  const handleDeletePlaylist = (idx) => {
+  const handleDeletePlaylist = async (playlistId) => {
     const confirmDelete = window.confirm(
       "Sei sicuro di voler eliminare questa playlist?"
     );
     if (!confirmDelete) return;
 
-    setSavedPlaylists((prev) => {
-      const updated = prev.filter((_, i) => i !== idx);
-      localStorage.setItem("playlists", JSON.stringify(updated)); // aggiorna localStorage
-      return updated;
-    });
-    setExpandedPlaylists((prev) => prev.filter((i) => i !== idx)); // chiude se era aperta
+    try {
+      const res = await fetch(`http://localhost:3001/playlist/${playlistId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setSavedPlaylists((prev) => prev.filter((p) => p.id !== playlistId));
+        setExpandedPlaylists((prev) => prev.filter((i) => i !== playlistId));
+      } else {
+        console.error("Errore eliminazione playlist:", res.status);
+      }
+    } catch (error) {
+      console.error("Errore eliminazione playlist:", error);
+    }
   };
 
   const regeneratePresignedUrl = async (trackId) => {
@@ -221,43 +233,9 @@ const Playlist = () => {
     }
   };
 
-  const handlePlayPlaylist = async (playlist) => {
-    console.log("🎧 Sto preparando la playlist:", playlist.name);
-
-    const fetchTrackFresh = async (track) => {
-      try {
-        const response = await fetch(`http://localhost:3001/song/${track.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            id: data.id,
-            titolo: data.titolo,
-            bucketName: data.bucketName,
-            fileName: data.fileName,
-            duration: data.duration,
-            rating: data.rating,
-            level: data.level,
-            presignedUrl: data.presignedUrl,
-          };
-        } else {
-          console.error("Errore nel fetch traccia:", response.status);
-          return track; // fallback ai dati esistenti se errore
-        }
-      } catch (error) {
-        console.error("Errore nel fetch traccia:", error);
-        return track; // fallback ai dati esistenti se errore
-      }
-    };
-
-    const tracksWithFreshData = await Promise.all(
-      playlist.tracks.map((track) => fetchTrackFresh(track))
-    );
-
+  const handlePlayPlaylist = (playlist) => {
     setCurrentTrackIndex(0);
-    setActivePlayer({
-      ...playlist,
-      tracks: tracksWithFreshData,
-    });
+    setActivePlayer(playlist);
   };
 
   return (
@@ -395,15 +373,11 @@ const Playlist = () => {
       {savedPlaylists.length > 0 && (
         <div className="saved-playlists mt-4">
           <h5>Playlist salvate:</h5>
-          {savedPlaylists.map((playlist, idx) => (
-            <div
-              key={idx}
-              className="saved-playlist mb-3 p-2 border rounded"
-              style={{ cursor: "pointer" }}
-            >
+          {savedPlaylists.map((playlist) => (
+            <div key={playlist.id} className="saved-playlist">
               <div className="d-flex justify-content-between align-items-center">
                 <div
-                  onClick={() => togglePlaylist(idx)}
+                  onClick={() => togglePlaylist(playlist.id)}
                   style={{ flex: 1, cursor: "pointer" }}
                 >
                   <h6 className="mb-0">{playlist.name}</h6>
@@ -420,25 +394,26 @@ const Playlist = () => {
                 </div>
               </div>
 
-              {expandedPlaylists.includes(idx) && (
+              {expandedPlaylists.includes(playlist.id) && (
                 <div className="mt-2">
                   <ul className="list-group mb-2">
-                    {playlist.tracks.map((track, index) => (
-                      <li
-                        key={track.id}
-                        className="list-group-item d-flex justify-content-between align-items-center"
-                      >
-                        {index + 1}. {track.titolo}
-                        <Badge bg="secondary">
-                          {track.duration ? `${track.duration} sec` : "N/A"}
-                        </Badge>
-                      </li>
-                    ))}
+                    {Array.isArray(playlist.tracks) &&
+                      playlist.tracks.map((track, index) => (
+                        <li
+                          key={track.id}
+                          className="list-group-item d-flex justify-content-between align-items-center"
+                        >
+                          {index + 1}. {track.titolo}
+                          <Badge bg="secondary">
+                            {track.duration ? `${track.duration} sec` : "N/A"}
+                          </Badge>
+                        </li>
+                      ))}
                   </ul>
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleDeletePlaylist(idx)}
+                    onClick={() => handleDeletePlaylist(playlist.id)}
                   >
                     🗑️ Elimina playlist
                   </Button>
@@ -456,9 +431,10 @@ const Playlist = () => {
             <p>Durata: {activePlayer.totalDuration}</p>
 
             <div className="tracks-columns mb-3">
-              {Array.from(
-                { length: Math.ceil(activePlayer.tracks.length / 5) },
-                (_, colIndex) => (
+              {Array.isArray(activePlayer.tracks) &&
+                Array.from({
+                  length: Math.ceil(activePlayer.tracks.length / 5),
+                }).map((_, colIndex) => (
                   <div key={colIndex} className="tracks-column">
                     {activePlayer.tracks
                       .slice(colIndex * 5, colIndex * 5 + 5)
@@ -481,8 +457,7 @@ const Playlist = () => {
                         );
                       })}
                   </div>
-                )
-              )}
+                ))}
             </div>
 
             <div className="d-flex justify-content-center mb-3">

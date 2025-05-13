@@ -4,7 +4,7 @@ import liveImage from "../../Assets/Img/home.png";
 import introMusic from "../../Assets/Music/KRS-ONE---A-Friend-instrumental.mp3";
 
 const StartLive = ({ onFinish }) => {
-  const [timeLeft, setTimeLeft] = useState(50); // in secondi
+  const [timeLeft, setTimeLeft] = useState(5); // in secondi
 
   const phrases = [
     "Brew your Best Coffee...",
@@ -17,7 +17,7 @@ const StartLive = ({ onFinish }) => {
   ];
 
   const typingSpeed = 60; // velocita effetto battitura
-  const phraseDelay = 20000; // velocita alternanza frasi
+  const phraseDelay = 10000; // velocita alternanza frasi
   const musicVolume = 0.4; //volume musica sottofondo
 
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
