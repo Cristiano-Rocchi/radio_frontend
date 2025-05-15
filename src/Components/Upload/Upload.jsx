@@ -9,8 +9,10 @@ const Upload = () => {
   const [albums, setAlbums] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
 
+  const AlbumNumberForms = 20;
+
   const [albumForms, setAlbumForms] = useState(
-    Array.from({ length: 10 }, () => ({
+    Array.from({ length: AlbumNumberForms }, () => ({
       title: "",
       artist: "",
       year: "",
@@ -20,7 +22,7 @@ const Upload = () => {
   );
 
   const [songForms, setSongForms] = useState(
-    Array.from({ length: 10 }, () => ({
+    Array.from({ length: AlbumNumberForms }, () => ({
       genreId: "",
       albumId: "",
       rating: "",
