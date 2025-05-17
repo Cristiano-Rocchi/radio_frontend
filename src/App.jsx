@@ -5,10 +5,12 @@ import Control from "./Components/Control/Control";
 import Upload from "./Components/Upload/Upload";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Database from "./Components/Control/Database/Database";
+import MyNavbar from "./Components/Navbar/MyNavbar";
 
 function App() {
   return (
     <BrowserRouter>
+      <MyNavbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/control" element={<Control />} />
