@@ -1,20 +1,46 @@
+// ==============================
+// ✅ INDICE
+// 1. Import
+// 2. Stato e costanti iniziali
+//   2.1 Stati di navigazione (step)
+//   2.2 Liste (generi, album)
+//   2.3 Form album e canzoni
+// 3. Effetti iniziali
+// 4. Fetch dati
+//   4.1 fetchGenres
+//   4.2 fetchAlbums
+// 5. Gestione form
+//   5.1 handleAlbumChange
+//   5.2 handleSongChange
+// 6. Upload
+//   6.1 uploadAlbumsSequentially
+//   6.2 uploadSongsSequentially
+// ==============================
+
 import React, { useEffect, useState } from "react";
 import "./Upload.css";
 import { Button, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
+// 2. Stato e costanti iniziali
+
+// 2.1 Stati di navigazione (step)
 const Upload = () => {
   const [step, setStep] = useState("start"); // start | chooseGenre | uploadAlbum | uploadSong
+
+  // 2.2 Liste (generi, album)
   const [genres, setGenres] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
 
-  const AlbumNumberForms = 20;
+  // 2.3 Form album e canzoni
+  const AlbumNumberForms = 100;
 
   const [albumForms, setAlbumForms] = useState(
     Array.from({ length: AlbumNumberForms }, () => ({
-      title: "",
       artist: "",
+      title: "",
+
       year: "",
       file: null,
       status: "ready",
@@ -33,6 +59,7 @@ const Upload = () => {
     }))
   );
 
+  // 3. Effetti iniziali
   useEffect(() => {
     if (step !== "start") {
       fetchGenres();
@@ -40,6 +67,9 @@ const Upload = () => {
     }
   }, [step]);
 
+  // 4. Fetch dati
+
+  // 4.1 fetchGenres
   const fetchGenres = async () => {
     try {
       const response = await fetch("http://localhost:3001/genre");
@@ -52,6 +82,7 @@ const Upload = () => {
     }
   };
 
+  // 4.2 fetchAlbums
   const fetchAlbums = async () => {
     try {
       const response = await fetch("http://localhost:3001/album");
@@ -64,18 +95,25 @@ const Upload = () => {
     }
   };
 
+  // 5. Gestione form
+
+  // 5.1 handleAlbumChange
   const handleAlbumChange = (index, field, value) => {
     const updated = [...albumForms];
     updated[index][field] = value;
     setAlbumForms(updated);
   };
 
+  // 5.2 handleSongChange
   const handleSongChange = (index, field, value) => {
     const updated = [...songForms];
     updated[index][field] = value;
     setSongForms(updated);
   };
 
+  // 6. Upload
+
+  // 6.1 Upload sequenziale album
   const uploadAlbumsSequentially = async () => {
     setAlbumForms((prev) =>
       prev.map((form) =>
@@ -110,7 +148,6 @@ const Upload = () => {
       formData.append("artist", album.artist);
       formData.append("date", album.year);
 
-      // ⬇️ Aggiungi TUTTI i file al campo "songs"
       album.files.forEach((file) => {
         formData.append("songs", file);
       });
@@ -134,6 +171,7 @@ const Upload = () => {
     }
   };
 
+  // 6.2 Upload sequenziale canzoni
   const uploadSongsSequentially = async () => {
     setSongForms((prev) =>
       prev.map((form) =>
@@ -171,21 +209,10 @@ const Upload = () => {
       }
     }
   };
-
+  // 7. Render
   return (
     <div className="upload-page">
-      <div className="side-navbar">
-        <div className="nav-item">
-          <Link to="/">
-            <h5>Home</h5>
-          </Link>
-        </div>
-        <div className="nav-item">
-          <Link to="/control">
-            <h5>Control</h5>
-          </Link>
-        </div>
-      </div>
+      {/* 7.2 Step iniziale */}
       {step === "start" && (
         <div className="button-group">
           <Button onClick={() => setStep("chooseGenre")} className="me-3">
@@ -195,6 +222,7 @@ const Upload = () => {
         </div>
       )}
 
+      {/* 7.3 Scelta del genere */}
       {step === "chooseGenre" && (
         <div>
           <div className="d-flex gap-5 mb-3">
@@ -222,6 +250,7 @@ const Upload = () => {
         </div>
       )}
 
+      {/* 7.4 Upload Album */}
       {step === "uploadAlbum" && (
         <div>
           <div className="d-flex gap-5 mb-3">
@@ -238,19 +267,9 @@ const Upload = () => {
           </div>
 
           <div className="upload-cards-container">
-            {" "}
             {albumForms.map((form, idx) => (
               <div key={idx} className="upload-card mb-3 p-3 border rounded">
                 <h6>Album {idx + 1}</h6>
-                <Form.Group>
-                  <Form.Label>Titolo</Form.Label>
-                  <Form.Control
-                    value={form.title}
-                    onChange={(e) =>
-                      handleAlbumChange(idx, "title", e.target.value)
-                    }
-                  />
-                </Form.Group>
                 <Form.Group>
                   <Form.Label>Artista</Form.Label>
                   <Form.Control
@@ -260,6 +279,16 @@ const Upload = () => {
                     }
                   />
                 </Form.Group>
+                <Form.Group>
+                  <Form.Label>Titolo</Form.Label>
+                  <Form.Control
+                    value={form.title}
+                    onChange={(e) =>
+                      handleAlbumChange(idx, "title", e.target.value)
+                    }
+                  />
+                </Form.Group>
+
                 <Form.Group>
                   <Form.Label>Anno</Form.Label>
                   <Form.Control
@@ -303,6 +332,7 @@ const Upload = () => {
         </div>
       )}
 
+      {/* 7.5 Upload Canzoni */}
       {step === "uploadSong" && (
         <div>
           <div className="d-flex gap-5 mb-3">
@@ -316,7 +346,6 @@ const Upload = () => {
             </Button>
           </div>
           <div className="upload-cards-container">
-            {" "}
             {songForms.map((form, idx) => (
               <div key={idx} className="upload-card mb-3 p-3 border rounded">
                 <h6>Canzone {idx + 1}</h6>

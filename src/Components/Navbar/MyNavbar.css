@@ -47,3 +47,63 @@ a {
 .dropdown-item:hover {
   background-color: #e6e6e6;
 }
+
+.dark-mode .navbar {
+  background-color: #222;
+  color: white;
+}
+
+/* --------Toggle Switch------ */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 15px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 20px;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 11px;
+  width: 11px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:checked + .slider::before {
+  transform: translateX(15px);
+}
+
+/* --------Dark mode------ */
+.dark-mode .dropdown,
+.dark-mode .dropdown-item {
+  background-color: #333;
+  color: white;
+}
+
+.dark-mode .dropdown-item:hover,
+.dark-mode .menu-item:hover {
+  background-color: #444;
+}

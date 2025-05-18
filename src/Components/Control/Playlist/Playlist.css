@@ -22,3 +22,21 @@
   z-index: 9999;
   border-radius: 8px;
 }
+
+/* Modalità notte */
+.dark-mode .playlist-column-left,
+.dark-mode .playlist-column-center,
+.dark-mode .playlist-column-right {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}
+
+.dark-mode .track-modal {
+  background-color: #2c2c2c;
+  color: #f1f1f1;
+  border-color: #555;
+}
+.navbar.dark-mode {
+  background-color: #222 !important;
+  color: white !important;
+}

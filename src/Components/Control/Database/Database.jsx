@@ -1,7 +1,31 @@
+// ==============================
+// ✅ INDICE
+// 1. Import
+// 2. Stato
+// 3. Effetti
+// 4. Fetch
+//   4.1 Fetch generi
+//   4.2 Fetch album
+// 5. Selezione
+//   5.1 Genere
+//   5.2 Album
+// 6. Ricerca
+//   6.1 Titolo
+//   6.2 Artista
+//   6.3 Esecuzione
+// 7. Azioni
+//   7.1 Elimina album
+//   7.2 Salva canzone
+// 8. Utility
+//   8.1 Filtra album per genere
+// 9. Render
+// ==============================
+
 import React, { useEffect, useState } from "react";
 import "./Database.css";
 import { Button, Badge } from "react-bootstrap";
 
+// 2. Stato
 const Database = () => {
   const [genres, setGenres] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -13,11 +37,13 @@ const Database = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [editingSongs, setEditingSongs] = useState({});
 
+  // 3. Effetti
   useEffect(() => {
     fetchGenres();
     fetchAlbums();
   }, []);
 
+  // 4.1 Fetch generi
   const fetchGenres = async () => {
     try {
       const response = await fetch("http://localhost:3001/genre");
@@ -33,6 +59,7 @@ const Database = () => {
     }
   };
 
+  // 4.2 Fetch album
   const fetchAlbums = async () => {
     try {
       const response = await fetch("http://localhost:3001/album");
@@ -47,15 +74,18 @@ const Database = () => {
     }
   };
 
+  // 5.1 Selezione genere
   const handleSelectGenre = (genre) => {
     setSelectedGenre(genre);
     setSelectedAlbum(null);
   };
 
+  // 5.2 Selezione album
   const handleSelectAlbum = (album) => {
     setSelectedAlbum(album);
   };
 
+  // 5.3 Torna agli album
   const handleBackToAlbums = () => {
     setSelectedAlbum(null);
   };
@@ -67,12 +97,14 @@ const Database = () => {
     performSearch(value, artistQuery);
   };
 
+  // 6.2 Ricerca per artista
   const handleArtistSearchChange = (e) => {
     const value = e.target.value;
     setArtistQuery(value);
     performSearch(searchQuery, value);
   };
 
+  // 6.3 Esecuzione ricerca
   const performSearch = async (title, artist) => {
     if (!title.trim() && !artist.trim()) {
       setSearchResults([]);
@@ -100,6 +132,7 @@ const Database = () => {
     }
   };
 
+  // 7.1 Elimina album
   const handleDeleteAlbum = async (albumId, albumTitle) => {
     const confirmed = window.confirm(
       `Sei sicuro di voler eliminare l'album "${albumTitle}"?`
@@ -127,6 +160,7 @@ const Database = () => {
     }
   };
 
+  // 7.2 Salva canzone
   const handleSaveSong = async (songId, rating, level, title) => {
     if (rating < 0 || rating > 10) {
       alert("Il rating deve essere tra 0 e 10.");
@@ -179,10 +213,12 @@ const Database = () => {
     }
   };
 
+  // 8.1 Filtro per genere selezionato
   const genreFilteredAlbums = selectedGenre
     ? albums.filter((album) => album.genreId === selectedGenre.id)
     : albums;
 
+  // 9. Render
   return (
     <div className="database">
       {/* Barra dei Generi (nascosta quando cerchi) */}

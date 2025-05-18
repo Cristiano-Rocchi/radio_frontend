@@ -1,3 +1,41 @@
+// ==============================
+// ✅ INDICE
+// 1. Import
+// 2. Stato e riferimenti
+//   2.1 Stato UI
+//   2.2 Stato dati
+//   2.3 Stato audio
+//   2.4 Stato drag & drop
+// 3. Effetti React
+//   3.1 Caricamento generi e album
+//   3.2 Caricamento iniziale playlist
+//   3.3 Autoplay traccia attiva
+//   3.4 Chiudi modale se lista è vuota
+// 4. Funzioni fetch
+//   4.1 Fetch playlist
+//   4.2 Fetch generi
+//   4.3 Fetch album
+// 5. Ricerca
+//   5.1 Ricerca per titolo/album
+//   5.2 Ricerca per artista
+//   5.3 Ricerca canzoni per titolo
+// 6. Selezione tracce
+//   6.1 Toggle selezione traccia
+//   6.2 Rimuovi traccia dalla selezione
+// 7. Gestione playlist
+//   7.1 Calcola durata totale
+//   7.2 Salva nuova playlist
+//   7.3 Espandi playlist
+//   7.4 Elimina playlist
+//   7.5 Regenerazione Presigned URL
+//   7.6 Riproduci playlist
+// 8. Modifica tracce (inline)
+//   8.1 Gestione stato edit
+//   8.2 Salvataggio modifiche
+// 9. Render
+// ==============================
+
+// 1. Import
 import React, { useState, useEffect, useRef } from "react";
 import "./Playlist.css";
 import { Badge, Button, Col, Container, Row } from "react-bootstrap";
@@ -18,9 +56,16 @@ import {
 
 import { CSS } from "@dnd-kit/utilities";
 
+import { useContext } from "react";
+import { SettingsContext } from "../../Settings/SettingsContext";
+
+// 2. Stato e riferimenti
 const Playlist = () => {
+  // 2.1 Stato UI
   const [isBuilding, setIsBuilding] = useState(false);
   const [playlistName, setPlaylistName] = useState("");
+
+  // 2.2 Stato dati
   const [genres, setGenres] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
@@ -36,13 +81,22 @@ const Playlist = () => {
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [savedPlaylists, setSavedPlaylists] = useState([]);
   const [expandedPlaylists, setExpandedPlaylists] = useState([]);
+  const [editingPlaylistId, setEditingPlaylistId] = useState(null);
+  const [editedName, setEditedName] = useState("");
+
+  // 2.3 Stato audio
   const [activePlayer, setActivePlayer] = useState(null);
   const audioRef = useRef(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
+  // 2.4 Stato drag & drop
   const sensors = useSensors(useSensor(PointerSensor));
   const [reorderMode, setReorderMode] = useState({});
 
+  //2.5 Stao Modalità Notte
+  const { darkMode } = useContext(SettingsContext);
+
+  // 3. Effetti React
   useEffect(() => {
     if (isBuilding) {
       fetchGenres();
@@ -50,10 +104,12 @@ const Playlist = () => {
     }
   }, [isBuilding]);
 
+  // 3.1 Caricamento iniziale playlist
   useEffect(() => {
     fetchSavedPlaylists();
   }, []);
 
+  // 4. Funzioni fetch
   const fetchSavedPlaylists = async () => {
     try {
       const res = await fetch("http://localhost:3001/playlist");
@@ -80,18 +136,21 @@ const Playlist = () => {
     setExpandedPlaylists([]);
   };
 
+  // 3.2 Autoplay traccia attiva
   useEffect(() => {
     if (activePlayer && audioRef.current) {
       audioRef.current.play();
     }
   }, [currentTrackIndex]);
 
+  // 3.3 Chiudi modale se lista è vuota
   useEffect(() => {
     if (selectedTracks.length === 0) {
       setShowTrackModal(false);
     }
   }, [selectedTracks]);
 
+  // 4.2 Fetch generi
   const fetchGenres = async () => {
     try {
       const response = await fetch("http://localhost:3001/genre");
@@ -107,6 +166,7 @@ const Playlist = () => {
     }
   };
 
+  // 4.3 Fetch album
   const fetchAlbums = async () => {
     try {
       const response = await fetch("http://localhost:3001/album");
@@ -121,12 +181,16 @@ const Playlist = () => {
     }
   };
 
+  // 5. Ricerca
+
+  // 5.1 Ricerca per titolo/album
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
     performSearch(value, artistQuery);
   };
 
+  // 5.2 Ricerca per artista
   const handleArtistSearchChange = (e) => {
     const value = e.target.value;
     setArtistQuery(value);
@@ -164,6 +228,9 @@ const Playlist = () => {
     setSelectedAlbum(album);
   };
 
+  // 6. Selezione tracce
+
+  // 6.1 Toggle selezione traccia
   const handleToggleTrack = (track) => {
     const alreadySelected = selectedTracks.find((t) => t.id === track.id);
     let updatedTracks;
@@ -177,10 +244,12 @@ const Playlist = () => {
     setShowTrackModal(updatedTracks.length > 0); // mostra se c'è almeno una traccia
   };
 
+  // 6.2 Rimuovi traccia dalla selezione
   const handleRemoveTrack = (trackId) => {
     setSelectedTracks((prev) => prev.filter((t) => t.id !== trackId));
   };
 
+  // 5.3 Ricerca canzoni per titolo
   const searchSongsByTitle = async (title) => {
     setExpandedAlbumId(null);
     if (!title.trim()) {
@@ -206,6 +275,7 @@ const Playlist = () => {
     }
   };
 
+  // 7. Gestione playlist
   const getTotalDuration = () => {
     const totalSeconds = selectedTracks.reduce(
       (sum, track) => sum + (track.duration || 0),
@@ -216,6 +286,14 @@ const Playlist = () => {
     return `${minutes} min ${seconds} sec`;
   };
 
+  const getPlaylistDuration = (tracks) => {
+    const total = tracks.reduce((sum, t) => sum + (t.duration || 0), 0);
+    const min = Math.floor(total / 60);
+    const sec = total % 60;
+    return `${min} min ${sec} sec`;
+  };
+
+  // 7.2 Salva nuova playlist
   const handleSavePlaylist = async () => {
     if (!playlistName.trim()) {
       alert("Inserisci un nome per la playlist!");
@@ -259,12 +337,14 @@ const Playlist = () => {
     }
   };
 
+  // 7.3 Espandi playlist
   const togglePlaylist = (id) => {
     setExpandedPlaylists((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [id]
     );
   };
 
+  // 7.4 Elimina playlist
   const handleDeletePlaylist = async (playlistId) => {
     const confirmDelete = window.confirm(
       "Sei sicuro di voler eliminare questa playlist?"
@@ -287,6 +367,38 @@ const Playlist = () => {
     }
   };
 
+  //7.5 Modifica Nome Playlist
+
+  const startEditingName = (playlist) => {
+    setEditingPlaylistId(playlist.id);
+    setEditedName(playlist.name);
+  };
+
+  const saveEditedName = async (playlistId) => {
+    try {
+      const res = await fetch(`http://localhost:3001/playlist/${playlistId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editedName }),
+      });
+
+      if (res.ok) {
+        // aggiorna localmente
+        setSavedPlaylists((prev) =>
+          prev.map((p) =>
+            p.id === playlistId ? { ...p, name: editedName } : p
+          )
+        );
+        setEditingPlaylistId(null);
+      } else {
+        console.error("Errore salvataggio nome playlist:", res.status);
+      }
+    } catch (error) {
+      console.error("Errore salvataggio nome playlist:", error);
+    }
+  };
+
+  // 7.6 Regenerazione Presigned URL
   const regeneratePresignedUrl = async (trackId) => {
     try {
       const response = await fetch(`http://localhost:3001/song/${trackId}`);
@@ -303,12 +415,15 @@ const Playlist = () => {
     }
   };
 
+  // 7.7 Riproduci playlist
   const handlePlayPlaylist = (playlist) => {
     setCurrentTrackIndex(0);
     setActivePlayer(playlist);
   };
 
+  // 8. Modifica tracce (inline)
   const renderTrackRow = (track, index, playlist) => {
+    // 8.1 Gestione stato edit
     const isEditing = editingSongs[track.id]?.isEditing || false;
     const editedTitle = editingSongs[track.id]?.editedTitle ?? track.titolo;
     const editedRating =
@@ -325,6 +440,7 @@ const Playlist = () => {
       }));
     };
 
+    // 8.2 Salvataggio modifiche
     const handleEditClick = async () => {
       if (isEditing) {
         const body = {
@@ -370,6 +486,7 @@ const Playlist = () => {
       }
     };
 
+    // 9. Render
     return (
       <>
         <td>{index + 1}</td>
@@ -432,10 +549,10 @@ const Playlist = () => {
   };
 
   return (
-    <div className="playlist">
+    <div className={`playlist ${darkMode ? "dark-mode" : ""}`}>
       <Container fluid>
         <Row>
-          {/* Colonna 1: Playlist salvate */}
+          {/* -------------Colonna 1: Playlist salvate--------------- */}
           <Col xs={3} className="playlist-column-left">
             <h5 className="text-center">Playlist Salvate</h5>
             <p
@@ -462,21 +579,48 @@ const Playlist = () => {
             ))}
           </Col>
 
-          {/* Colonna 2: Tracce della playlist */}
+          {/* -----------Colonna 2: Tracce della playlist----------------- */}
           <Col xs={6} className="playlist-column-center">
             {expandedPlaylists.length > 0 &&
               savedPlaylists
                 .filter((pl) => expandedPlaylists.includes(pl.id))
                 .map((playlist) => (
                   <div key={playlist.id} className="saved-playlist">
-                    <div className="d-flex justify-content-start mb-2">
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleDeletePlaylist(playlist.id)}
-                      >
-                        🗑️ Elimina playlist
-                      </Button>
+                    <div className="mb-2 d-flex align-items-center gap-3">
+                      {editingPlaylistId === playlist.id ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            className="form-control form-control-sm me-2"
+                            style={{ width: "200px" }}
+                          />
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => saveEditedName(playlist.id)}
+                          >
+                            OK
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h5 className="mb-0 me-2">{playlist.name}</h5>
+                          <button
+                            className="btn btn-outline-secondary border-0 btn-sm"
+                            onClick={() => startEditingName(playlist)}
+                          >
+                            ✏️
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    <h5 className="fs-6">
+                      {" "}
+                      Durata: {getPlaylistDuration(playlist.tracks)}
+                    </h5>
+
+                    <div className="d-flex justify-content-start mb-2 mt-3 gap-3">
                       <Button
                         variant={
                           reorderMode[playlist.id]
@@ -512,6 +656,13 @@ const Playlist = () => {
                           ? "💾 Salva ordine"
                           : "📝 Modifica ordine"}
                       </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDeletePlaylist(playlist.id)}
+                      >
+                        🗑️ Elimina playlist
+                      </Button>
                     </div>
                     <table className="table table-striped">
                       <thead>
@@ -523,6 +674,7 @@ const Playlist = () => {
                           <th>Rating</th>
                           <th>Level</th>
                           <th>Durata</th>
+                          <th>Edit</th>
                         </tr>
                       </thead>
                       {reorderMode[playlist.id] ? (

@@ -1,30 +1,46 @@
+// ==============================
+// ✅ INDICE
+// 1. Import e context
+// 2. Riferimenti e stato menu
+// 3. Gestione eventi
+//   3.1 Toggle menu
+//   3.2 Click fuori dal menu
+//   3.3 Gestione input: startLiveTime
+//   3.4 Gestione input: phraseDelay
+// 4. Render navbar con dropdown
+// ==============================
+
 import React, { useState, useEffect, useRef, useContext } from "react";
 import "./MyNavbar.css";
 import { Link } from "react-router-dom";
 import { SettingsContext } from "../Settings/SettingsContext";
 
+// 1. Import e context
 const MyNavbar = () => {
-  const { startLiveTime, setStartLiveTime, phraseDelay, setPhraseDelay } =
-    useContext(SettingsContext);
-  const [openMenu, setOpenMenu] = useState(null);
+  const {
+    startLiveTime,
+    setStartLiveTime,
+    phraseDelay,
+    setPhraseDelay,
+    darkMode,
+    setDarkMode,
+  } = useContext(SettingsContext);
 
+  // 2. Riferimenti e stato menu
+  const [openMenu, setOpenMenu] = useState(null);
   const navbarRef = useRef(null);
   const settingsRef = useRef(null);
 
-  // Gestione input phraseDelay in secondi (salviamo in millisecondi)
-  const handlePhraseDelayChange = (e) => {
-    const seconds = parseInt(e.target.value, 10);
-    if (!isNaN(seconds) && seconds >= 1 && seconds <= 60) {
-      setPhraseDelay(seconds * 1000);
-    }
-  };
+  // 3. Gestione eventi
 
+  // 3.1 Toggle menu
   const toggleMenu = (menuName) => {
     setOpenMenu(openMenu === menuName ? null : menuName);
   };
+
+  // 3.2 Click fuori dal menu
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Se il menu aperto è "settings" e clicchi fuori da settingsRef, chiudi
       if (
         openMenu === "settings" &&
         settingsRef.current &&
@@ -32,8 +48,6 @@ const MyNavbar = () => {
       ) {
         setOpenMenu(null);
       }
-
-      // Se il menu aperto è "file" e clicchi fuori da navbarRef, chiudi
       if (
         openMenu === "file" &&
         navbarRef.current &&
@@ -49,6 +63,7 @@ const MyNavbar = () => {
     };
   }, [openMenu]);
 
+  // 3.3 Gestione input: startLiveTime (in secondi)
   const handleTimerChange = (e) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value >= 1 && value <= 999) {
@@ -56,8 +71,23 @@ const MyNavbar = () => {
     }
   };
 
+  // 3.4 Gestione input: phraseDelay (visualizza in sec, salva in ms)
+  const handlePhraseDelayChange = (e) => {
+    const seconds = parseInt(e.target.value, 10);
+    if (!isNaN(seconds) && seconds >= 1 && seconds <= 60) {
+      setPhraseDelay(seconds * 1000);
+    }
+  };
+
+  // 4. Render navbar con dropdown
   return (
-    <div ref={navbarRef} className="navbar d-flex justify-content-start">
+    <div
+      ref={navbarRef}
+      className={`navbar d-flex justify-content-start ${
+        darkMode ? "dark-mode" : ""
+      }`}
+    >
+      {/* === 4.1 File === */}
       <div className="menu-item ms-1" onClick={() => toggleMenu("file")}>
         File
         {openMenu === "file" && (
@@ -75,14 +105,30 @@ const MyNavbar = () => {
         )}
       </div>
 
+      {/* === 4.2 Menu Impostazioni === */}
       <div className="menu-item" onClick={() => toggleMenu("settings")}>
         Impostazioni
       </div>
 
       {openMenu === "settings" && (
         <div ref={settingsRef} className="dropdown dropdown-settings">
-          <div className="dropdown-item">Modalità Notte</div>
-          <div className="dropdown-item d-flex align-items-center">
+          {/*--- Modalità Notet--- */}
+
+          <div className="dropdown-item d-flex align-items-center gap-3">
+            Modalità Notte
+            <label className="switch ms-2">
+              <input
+                type="checkbox"
+                checked={darkMode}
+                onChange={() => setDarkMode(!darkMode)}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+
+          {/*---Timer ----*/}
+
+          <div className="dropdown-item d-flex align-items-center ">
             Timer Start Live:
             <input
               type="number"
@@ -95,6 +141,8 @@ const MyNavbar = () => {
             />
             <span className="ms-2">sec</span>
           </div>
+
+          {/* ---- Delay Frasi---- */}
           <div className="dropdown-item d-flex align-items-center">
             Phrase Delay:
             <input
@@ -108,9 +156,14 @@ const MyNavbar = () => {
             />
             <span className="ms-2">sec</span>
           </div>
+
+          {/* Altri (placeholder per future opzioni) */}
+          <div className="dropdown-section-title mt-2 d-none">Altro</div>
+          <div className="dropdown-item d-none">Coming soon...</div>
         </div>
       )}
 
+      {/* === 4.3 Menu Aiuto === */}
       <div className="menu-item">?</div>
     </div>
   );

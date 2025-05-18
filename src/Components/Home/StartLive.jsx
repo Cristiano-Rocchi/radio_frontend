@@ -1,12 +1,25 @@
+// ==============================
+// ✅ INDICE
+// 1. Import
+// 2. Costanti e contesto
+// 3. Stato e riferimenti
+// 4. Effetti
+//   4.1 Countdown
+//   4.2 Musica di sottofondo
+//   4.3 Digitazione frasi
+// 5. Utility
+// 6. Render
+// ==============================
+
 import React, { useEffect, useState, useRef, useContext } from "react";
 import "../Home/StartLive.css";
 import liveImage from "../../Assets/Img/home.png";
 import introMusic from "../../Assets/Music/KRS-ONE---A-Friend-instrumental.mp3";
-import { SettingsContext } from "../Settings/SettingsContext"; // importa il context
+import { SettingsContext } from "../Settings/SettingsContext";
 
+// 2. Costanti e contesto
 const StartLive = ({ onFinish }) => {
-  const { startLiveTime } = useContext(SettingsContext); // ⬅️ prende dal context
-  const [timeLeft, setTimeLeft] = useState(startLiveTime); // inizializza con valore globale
+  const { startLiveTime, phraseDelay } = useContext(SettingsContext);
 
   const phrases = [
     "Brew your Best Coffee...",
@@ -19,22 +32,23 @@ const StartLive = ({ onFinish }) => {
   ];
 
   const typingSpeed = 60;
-  const { phraseDelay } = useContext(SettingsContext);
-
   const musicVolume = 0.4;
 
+  // 3. Stato e riferimenti
+  const [timeLeft, setTimeLeft] = useState(startLiveTime);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const typingTimeoutRef = useRef(null);
   const switchTimeoutRef = useRef(null);
   const audioIntroRef = useRef(null);
 
-  // ⏱️ Reimposta il timer ogni volta che cambia `startLiveTime` dal context
+  // 4. Effetti
+
+  // 4.1 Countdown
   useEffect(() => {
     setTimeLeft(startLiveTime);
   }, [startLiveTime]);
 
-  // ⌛ Countdown
   useEffect(() => {
     if (timeLeft <= 0) {
       onFinish();
@@ -48,7 +62,7 @@ const StartLive = ({ onFinish }) => {
     return () => clearInterval(interval);
   }, [timeLeft, onFinish]);
 
-  // 🎵 Musica sottofondo
+  // 4.2 Musica di sottofondo
   useEffect(() => {
     const audio = audioIntroRef.current;
 
@@ -85,7 +99,7 @@ const StartLive = ({ onFinish }) => {
     }
   }, [timeLeft]);
 
-  // ⌨️ Digitazione frasi
+  // 4.3 Digitazione frasi
   const typePhrase = (text, i = 0) => {
     if (i <= text.length) {
       setDisplayedText(text.slice(0, i));
@@ -111,22 +125,27 @@ const StartLive = ({ onFinish }) => {
     };
   }, [currentPhraseIndex]);
 
+  // 5. Utility
   const formatTime = (seconds) => {
     const m = String(Math.floor(seconds / 60)).padStart(2, "0");
     const s = String(seconds % 60).padStart(2, "0");
     return `${m}:${s}`;
   };
 
+  // 6. Render
   return (
     <>
       <div className="start-live-img">
         <img src={liveImage} alt="" />
       </div>
+
       <div className="start-live-overlay">
         <div className="live-label text-center">
           STAY CHILL... <br /> THE LIVE STARTS IN
         </div>
+
         <div className="countdown mb-5">{formatTime(timeLeft)}</div>
+
         <div className="intro-advice mt-3">
           <h3>
             {displayedText}
@@ -134,6 +153,7 @@ const StartLive = ({ onFinish }) => {
           </h3>
         </div>
       </div>
+
       <audio ref={audioIntroRef} src={introMusic} loop />
     </>
   );

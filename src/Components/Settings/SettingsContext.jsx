@@ -5,6 +5,7 @@
 // 3. Stato e persistenza
 //    3.1 startLiveTime
 //    3.2 phraseDelay
+//    3.3 darkMode
 // 4. Provider export
 // ==============================
 
@@ -40,6 +41,16 @@ export const SettingsProvider = ({ children }) => {
     localStorage.setItem("phraseDelay", phraseDelay);
   }, [phraseDelay]);
 
+  // 3.3 darkMode
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("darkMode");
+    return saved === "true"; // default: false
+  });
+
+  useEffect(() => {
+    localStorage.setItem("darkMode", darkMode);
+  }, [darkMode]);
+
   // 4. Provider export
   return (
     <SettingsContext.Provider
@@ -48,6 +59,8 @@ export const SettingsProvider = ({ children }) => {
         setStartLiveTime,
         phraseDelay,
         setPhraseDelay,
+        darkMode,
+        setDarkMode,
       }}
     >
       {children}

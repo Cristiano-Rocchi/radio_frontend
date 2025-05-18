@@ -1,3 +1,23 @@
+// ==============================
+// ✅ INDICE
+// 1. Import
+// 2. Stato e riferimenti
+// 3. Effetti
+//   3.1 Caricamento playlist
+//   3.2 Caricamento info album
+//   3.3 Cleanup timer
+// 4. Gestione player
+//   4.1 Selezione playlist
+//   4.2 Start con countdown
+//   4.3 Fine countdown
+//   4.4 Fine traccia (avanzamento)
+//   4.5 OnPlay + fade / stop
+// 5. Fetch album
+// 6. Utility
+//   6.1 Render skulls
+// 7. Render
+// ==============================
+
 import React, { useEffect, useRef, useState } from "react";
 import "./Home.css";
 import { Button, Col, Container, Row } from "react-bootstrap";
@@ -8,6 +28,7 @@ import ReactHowler from "react-howler";
 import StartLive from "../Home/StartLive";
 import ExitLive from "../Home/ExitLive";
 
+// 2. Stato e riferimenti
 const Home = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -48,6 +69,9 @@ const Home = () => {
 
   const [albumInfo, setAlbumInfo] = useState(null);
 
+  // 3. Effetti
+
+  // 3.1 Caricamento playlist
   useEffect(() => {
     fetchPlaylists();
   }, []);
@@ -66,18 +90,23 @@ const Home = () => {
     }
   };
 
+  // 3.2 Caricamento info album
   useEffect(() => {
     if (currentTrack && currentTrack.albumId) {
       fetchAlbum(currentTrack.albumId);
     }
   }, [currentTrack]);
+
+  // 3.3 Cleanup timer
   useEffect(() => {
+    // 7. Render
     return () => {
       clearTimeout(fadeTimerRef.current);
       clearTimeout(stopTimerRef.current);
     };
   }, [currentTrack]);
 
+  // 4.1 Selezione playlist
   const handleSelectPlaylist = (id) => {
     const playlist = playlists.find((p) => p.id === id);
     if (playlist) {
@@ -88,6 +117,7 @@ const Home = () => {
     }
   };
 
+  // 4.2 Start con countdown
   const handlePlay = () => {
     if (
       !currentPlaylist ||
@@ -100,6 +130,7 @@ const Home = () => {
     setShowCountdown(true);
   };
 
+  // 4.3 Fine countdown
   const handleCountdownFinish = () => {
     setShowCountdown(false);
     if (pendingTrack) {
@@ -109,6 +140,7 @@ const Home = () => {
     }
   };
 
+  // 4.4 Fine traccia \(avanzamento\)
   const handleEnded = () => {
     if (fadeTimerRef.current) {
       clearTimeout(fadeTimerRef.current);
@@ -144,6 +176,7 @@ const Home = () => {
     }
   };
 
+  // 4.5 OnPlay \+ fade / stop
   const handleOnPlay = () => {
     console.log("▶️ Traccia in riproduzione");
 
@@ -171,6 +204,7 @@ const Home = () => {
     }
   };
 
+  // 5. Fetch album
   const fetchAlbum = async (albumId) => {
     try {
       const response = await fetch(`http://localhost:3001/album/${albumId}`);
@@ -185,6 +219,7 @@ const Home = () => {
     }
   };
 
+  // 6.1 Render skulls
   const renderSkulls = (rating) => {
     const skulls = [];
     const skullCount = rating;
@@ -230,11 +265,11 @@ const Home = () => {
                       {albumInfo ? albumInfo.date : "Data"}
                     </h2>
 
-                    <h3 className="ms-5 mt-5">
+                    <h3 className="ms-4 mt-5">
                       <span>Artist:</span>
                       {albumInfo ? albumInfo.artist : "Artista"}
                     </h3>
-                    <h3 className="ms-5 mt-4">
+                    <h3 className="ms-4 mt-4">
                       <span>Album:</span>{" "}
                       {albumInfo ? albumInfo.title : "Album"}
                     </h3>
