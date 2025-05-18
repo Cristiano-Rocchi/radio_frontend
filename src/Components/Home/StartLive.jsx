@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import "../Home/StartLive.css";
 import liveImage from "../../Assets/Img/home.png";
 import introMusic from "../../Assets/Music/KRS-ONE---A-Friend-instrumental.mp3";
+import { SettingsContext } from "../Settings/SettingsContext"; // importa il context
 
 const StartLive = ({ onFinish }) => {
-  const [timeLeft, setTimeLeft] = useState(5); // in secondi
+  const { startLiveTime } = useContext(SettingsContext); // ⬅️ prende dal context
+  const [timeLeft, setTimeLeft] = useState(startLiveTime); // inizializza con valore globale
 
   const phrases = [
     "Brew your Best Coffee...",
@@ -16,9 +18,10 @@ const StartLive = ({ onFinish }) => {
     "This is 'A Friend' — KRS-One on the beat, instrumental style.",
   ];
 
-  const typingSpeed = 60; // velocita effetto battitura
-  const phraseDelay = 10000; // velocita alternanza frasi
-  const musicVolume = 0.4; //volume musica sottofondo
+  const typingSpeed = 60;
+  const { phraseDelay } = useContext(SettingsContext);
+
+  const musicVolume = 0.4;
 
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -26,7 +29,12 @@ const StartLive = ({ onFinish }) => {
   const switchTimeoutRef = useRef(null);
   const audioIntroRef = useRef(null);
 
-  // Countdown
+  // ⏱️ Reimposta il timer ogni volta che cambia `startLiveTime` dal context
+  useEffect(() => {
+    setTimeLeft(startLiveTime);
+  }, [startLiveTime]);
+
+  // ⌛ Countdown
   useEffect(() => {
     if (timeLeft <= 0) {
       onFinish();
@@ -40,7 +48,7 @@ const StartLive = ({ onFinish }) => {
     return () => clearInterval(interval);
   }, [timeLeft, onFinish]);
 
-  //musica sottofondo
+  // 🎵 Musica sottofondo
   useEffect(() => {
     const audio = audioIntroRef.current;
 
@@ -51,7 +59,7 @@ const StartLive = ({ onFinish }) => {
 
     if (timeLeft === 15 && audio) {
       let start = null;
-      const duration = 15000; // 15 secondi
+      const duration = 15000;
       const initialVolume = musicVolume;
 
       const fadeOut = (timestamp) => {
@@ -77,7 +85,7 @@ const StartLive = ({ onFinish }) => {
     }
   }, [timeLeft]);
 
-  // Digitazione sicura (niente intervalli multipli)
+  // ⌨️ Digitazione frasi
   const typePhrase = (text, i = 0) => {
     if (i <= text.length) {
       setDisplayedText(text.slice(0, i));
@@ -93,7 +101,6 @@ const StartLive = ({ onFinish }) => {
     }
   };
 
-  // Avvia digitazione ogni volta che cambia frase
   useEffect(() => {
     clearTimeout(typingTimeoutRef.current);
     clearTimeout(switchTimeoutRef.current);
