@@ -14,6 +14,8 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import "./MyNavbar.css";
 import { Link } from "react-router-dom";
 import { SettingsContext } from "../Settings/SettingsContext";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css"; // Stile base
 
 // 1. Import e context
 const MyNavbar = () => {
@@ -128,23 +130,30 @@ const MyNavbar = () => {
 
           {/*---Timer ----*/}
 
-          <div className="dropdown-item d-flex align-items-center ">
-            Timer Start Live:
-            <input
-              type="number"
-              min="1"
-              max="999"
-              value={startLiveTime}
-              onChange={handleTimerChange}
-              className="ms-2"
-              style={{ width: "70px" }}
-            />
-            <span className="ms-2">sec</span>
-          </div>
+          <Tippy content="Regola timer dello start prelive" placement="top">
+            <div className="dropdown-item d-flex align-items-center ">
+              Timer Start Live:
+              <input
+                type="number"
+                min="1"
+                max="999"
+                value={startLiveTime}
+                onChange={handleTimerChange}
+                className="ms-2"
+                style={{ width: "70px" }}
+              />
+              <span className="ms-2">sec</span>
+            </div>
+          </Tippy>
 
           {/* ---- Delay Frasi---- */}
           <div className="dropdown-item d-flex align-items-center">
-            Phrase Delay:
+            <Tippy
+              content="Intervallo tra una frase e l'altra durante il pre-live"
+              placement="top"
+            >
+              <span>Phrase Delay:</span>
+            </Tippy>
             <input
               type="number"
               min="1"

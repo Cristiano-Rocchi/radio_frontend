@@ -535,13 +535,42 @@ const Playlist = () => {
           )}
         </td>
         <td>{track.duration}</td>
-        <td>
+        <td className="d-flex gap-2">
           <Button
             variant={isEditing ? "success" : "outline-primary"}
             size="sm"
             onClick={handleEditClick}
           >
             {isEditing ? "Salva" : "Modifica"}
+          </Button>
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={() => {
+              const confirm = window.confirm(
+                "Vuoi rimuovere questa traccia dalla playlist?"
+              );
+              if (!confirm) return;
+
+              const updatedTracks = playlist.tracks.filter(
+                (t) => t.id !== track.id
+              );
+
+              setSavedPlaylists((prev) =>
+                prev.map((pl) =>
+                  pl.id === playlist.id ? { ...pl, tracks: updatedTracks } : pl
+                )
+              );
+
+              fetch(
+                `http://localhost:3001/playlist/${playlist.id}/song/${track.id}`,
+                {
+                  method: "DELETE",
+                }
+              );
+            }}
+          >
+            ❌
           </Button>
         </td>
       </>
