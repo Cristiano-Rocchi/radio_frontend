@@ -33,6 +33,12 @@
 //   8.1 Gestione stato edit
 //   8.2 Salvataggio modifiche
 // 9. Render
+//   9.1 Colonna 1: Playlist salvate
+//   9.2 Colonna 2: Tracce della playlist
+//   9.3 Colonna 3: Builder nuova playlist
+// 10. Modali
+//   10.1 Modale per tracce selezionate
+//   10.2 Modale per aggiungere tracce
 // ==============================
 
 // 1. Import
@@ -83,6 +89,12 @@ const Playlist = () => {
   const [expandedPlaylists, setExpandedPlaylists] = useState([]);
   const [editingPlaylistId, setEditingPlaylistId] = useState(null);
   const [editedName, setEditedName] = useState("");
+
+  const [showAddTrackModal, setShowAddTrackModal] = useState(false);
+  const [trackSearchQuery, setTrackSearchQuery] = useState("");
+  const [trackSearchResults, setTrackSearchResults] = useState([]);
+  const [tracksToAdd, setTracksToAdd] = useState([]);
+  const [playlistBeingEdited, setPlaylistBeingEdited] = useState(null);
 
   // 2.3 Stato audio
   const [activePlayer, setActivePlayer] = useState(null);
@@ -486,7 +498,7 @@ const Playlist = () => {
       }
     };
 
-    // 9. Render
+    // 9. ---------Render-------------------
     return (
       <>
         <td>{index + 1}</td>
@@ -535,7 +547,7 @@ const Playlist = () => {
           )}
         </td>
         <td>{track.duration}</td>
-        <td className="d-flex gap-2">
+        <td className="d-flex gap-1 ">
           <Button
             variant={isEditing ? "success" : "outline-primary"}
             size="sm"
@@ -581,7 +593,7 @@ const Playlist = () => {
     <div className={`playlist ${darkMode ? "dark-mode" : ""}`}>
       <Container fluid>
         <Row>
-          {/* -------------Colonna 1: Playlist salvate--------------- */}
+          {/*9.1 -------------Colonna 1: Playlist salvate--------------- */}
           <Col xs={3} className="playlist-column-left">
             <h5 className="text-center">Playlist Salvate</h5>
             <p
@@ -608,7 +620,7 @@ const Playlist = () => {
             ))}
           </Col>
 
-          {/* -----------Colonna 2: Tracce della playlist----------------- */}
+          {/*9.2 -----------Colonna 2: Tracce della playlist----------------- */}
           <Col xs={6} className="playlist-column-center">
             {expandedPlaylists.length > 0 &&
               savedPlaylists
@@ -686,6 +698,20 @@ const Playlist = () => {
                           : "📝 Modifica ordine"}
                       </Button>
                       <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => {
+                          setShowAddTrackModal(true);
+                          setTracksToAdd([]);
+                          setTrackSearchQuery("");
+                          setTrackSearchResults([]);
+                          setPlaylistBeingEdited(playlist);
+                        }}
+                      >
+                        ➕ Aggiungi traccia
+                      </Button>
+
+                      <Button
                         variant="danger"
                         size="sm"
                         onClick={() => handleDeletePlaylist(playlist.id)}
@@ -762,7 +788,7 @@ const Playlist = () => {
                 ))}
           </Col>
 
-          {/* Colonna 3: Builder nuova playlist */}
+          {/*9.3--- Colonna 3: Builder nuova playlist */}
           <Col xs={3} className="playlist-column-right">
             {isBuilding && (
               <div>
@@ -881,6 +907,8 @@ const Playlist = () => {
           </Col>
         </Row>
       </Container>
+      {/*10.------------Modali------------------*/}
+      {/* 10.1 Modale per tracce selezionate */}
       {showTrackModal && (
         <div className="track-modal">
           <h5>Tracce selezionate</h5>
@@ -943,6 +971,109 @@ const Playlist = () => {
                 setSearchQuery("");
                 setArtistQuery("");
               }
+            }}
+          >
+            Annulla
+          </Button>
+        </div>
+      )}
+
+      {/*10.2 Modale per aggiungere tracce a una playlist */}
+      {showAddTrackModal && playlistBeingEdited && (
+        <div className="track-modal">
+          <h5>Aggiungi tracce a: {playlistBeingEdited.name}</h5>
+          <input
+            type="text"
+            className="form-control mb-2"
+            placeholder="Cerca per nome..."
+            value={trackSearchQuery}
+            onChange={async (e) => {
+              const value = e.target.value;
+              setTrackSearchQuery(value);
+              if (value.trim().length > 1) {
+                const res = await fetch(
+                  `http://localhost:3001/song/search?title=${encodeURIComponent(
+                    value
+                  )}`
+                );
+                if (res.ok) {
+                  const data = await res.json();
+                  setTrackSearchResults(data);
+                }
+              } else {
+                setTrackSearchResults([]);
+              }
+            }}
+          />
+          <ul className="list-group mb-3">
+            {trackSearchResults.map((track) => (
+              <li
+                key={track.id}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <input
+                    type="checkbox"
+                    className="form-check-input me-2"
+                    checked={tracksToAdd.some((t) => t.id === track.id)}
+                    onChange={() => {
+                      setTracksToAdd((prev) =>
+                        prev.some((t) => t.id === track.id)
+                          ? prev.filter((t) => t.id !== track.id)
+                          : [...prev, track]
+                      );
+                    }}
+                  />
+                  {track.titolo}
+                </div>
+                <Badge bg="secondary">
+                  {track.duration ? `${track.duration} sec` : "N/A"}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+
+          <Button
+            variant="success"
+            className="w-100 mb-2"
+            onClick={async () => {
+              const updated = [...playlistBeingEdited.tracks, ...tracksToAdd];
+              setSavedPlaylists((prev) =>
+                prev.map((pl) =>
+                  pl.id === playlistBeingEdited.id
+                    ? { ...pl, tracks: updated }
+                    : pl
+                )
+              );
+
+              await fetch(
+                `http://localhost:3001/playlist/${playlistBeingEdited.id}/songs`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(tracksToAdd.map((t) => t.id)),
+                }
+              );
+
+              setShowAddTrackModal(false);
+              setTrackSearchQuery("");
+              setTrackSearchResults([]);
+              setTracksToAdd([]);
+              setPlaylistBeingEdited(null);
+            }}
+          >
+            OK
+          </Button>
+
+          <Button
+            variant="outline-secondary"
+            className="w-100"
+            onClick={() => {
+              setShowAddTrackModal(false);
+              setTracksToAdd([]);
+              setTrackSearchQuery("");
+              setTrackSearchResults([]);
+              setPlaylistBeingEdited(null);
             }}
           >
             Annulla
