@@ -21,6 +21,8 @@ import React, { useEffect, useState } from "react";
 import "./Upload.css";
 import { Button, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { SettingsContext } from "../Settings/SettingsContext";
 
 // 2. Stato e costanti iniziali
 
@@ -34,21 +36,22 @@ const Upload = () => {
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   // 2.3 Form album e canzoni
-  const AlbumNumberForms = 100;
+  const AlbumNumberForms = 20; // Numero di form per gli album
 
-  const [albumForms, setAlbumForms] = useState(
-    Array.from({ length: AlbumNumberForms }, () => ({
+  const { albumFormCount, songFormCount } = useContext(SettingsContext);
+
+  const [albumForms, setAlbumForms] = useState(() =>
+    Array.from({ length: albumFormCount }, () => ({
       artist: "",
       title: "",
-
       year: "",
       file: null,
       status: "ready",
     }))
   );
 
-  const [songForms, setSongForms] = useState(
-    Array.from({ length: AlbumNumberForms }, () => ({
+  const [songForms, setSongForms] = useState(() =>
+    Array.from({ length: songFormCount }, () => ({
       genreId: "",
       albumId: "",
       rating: "",
@@ -66,6 +69,32 @@ const Upload = () => {
       fetchAlbums();
     }
   }, [step]);
+
+  useEffect(() => {
+    setAlbumForms(
+      Array.from({ length: albumFormCount }, () => ({
+        artist: "",
+        title: "",
+        year: "",
+        file: null,
+        status: "ready",
+      }))
+    );
+  }, [albumFormCount]);
+
+  useEffect(() => {
+    setSongForms(
+      Array.from({ length: songFormCount }, () => ({
+        genreId: "",
+        albumId: "",
+        rating: "",
+        level: "",
+        subgenre: "",
+        file: null,
+        status: "ready",
+      }))
+    );
+  }, [songFormCount]);
 
   // 4. Fetch dati
 

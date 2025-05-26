@@ -6,6 +6,7 @@
 //    3.1 startLiveTime
 //    3.2 phraseDelay
 //    3.3 darkMode
+//    3.4 Numero form album
 // 4. Provider export
 // ==============================
 
@@ -51,6 +52,26 @@ export const SettingsProvider = ({ children }) => {
     localStorage.setItem("darkMode", darkMode);
   }, [darkMode]);
 
+  // 3.4 Numero form album
+  const [albumFormCount, setAlbumFormCount] = useState(() => {
+    const saved = localStorage.getItem("albumFormCount");
+    return saved ? parseInt(saved, 10) : 20; // default: 20 form
+  });
+
+  useEffect(() => {
+    localStorage.setItem("albumFormCount", albumFormCount);
+  }, [albumFormCount]);
+
+  // 3.5 Numero form canzoni
+  const [songFormCount, setSongFormCount] = useState(() => {
+    const saved = localStorage.getItem("songFormCount");
+    return saved ? parseInt(saved, 10) : 100;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("songFormCount", songFormCount);
+  }, [songFormCount]);
+
   // 4. Provider export
   return (
     <SettingsContext.Provider
@@ -61,6 +82,10 @@ export const SettingsProvider = ({ children }) => {
         setPhraseDelay,
         darkMode,
         setDarkMode,
+        albumFormCount,
+        setAlbumFormCount,
+        songFormCount,
+        setSongFormCount,
       }}
     >
       {children}

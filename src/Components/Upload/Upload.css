@@ -2,6 +2,7 @@
 
 .upload-page {
   padding: 2rem;
+  min-height: 100vh;
 }
 
 .button-group {

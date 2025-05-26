@@ -367,8 +367,8 @@ const Home = () => {
             </Col>
           </Row>
 
-          <Link to="/control">
-            <Button>Control Page</Button>
+          <Link to="/playlist">
+            <Button>Playlist Page</Button>
           </Link>
 
           {currentTrack && (

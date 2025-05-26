@@ -26,6 +26,10 @@ const MyNavbar = () => {
     setPhraseDelay,
     darkMode,
     setDarkMode,
+    albumFormCount,
+    setAlbumFormCount,
+    songFormCount,
+    setSongFormCount,
   } = useContext(SettingsContext);
 
   // 2. Riferimenti e stato menu
@@ -100,6 +104,9 @@ const MyNavbar = () => {
             <Link to="/playlist" className="dropdown-item">
               Playlist
             </Link>
+            <Link to="/upload" className="dropdown-item">
+              Upload
+            </Link>
             <Link to="/database" className="dropdown-item">
               Database
             </Link>
@@ -126,6 +133,9 @@ const MyNavbar = () => {
               />
               <span className="slider round"></span>
             </label>
+          </div>
+          <div className="dropdown-section-title ms-2 mt-2 border-bottom">
+            Pre Live
           </div>
 
           {/*---Timer ----*/}
@@ -166,9 +176,53 @@ const MyNavbar = () => {
             <span className="ms-2">sec</span>
           </div>
 
-          {/* Altri (placeholder per future opzioni) */}
-          <div className="dropdown-section-title mt-2 d-none">Altro</div>
-          <div className="dropdown-item d-none">Coming soon...</div>
+          {/* -----Numero Form Album----- */}
+          <div className="dropdown-section-title mt-2 ms-2">Upload</div>
+          <div className="dropdown-item d-flex align-items-center">
+            <Tippy
+              content="Numero massimo di upload per gli album"
+              placement="top"
+            >
+              <span>Form Album:</span>
+            </Tippy>
+            <input
+              type="number"
+              min="1"
+              max="500"
+              value={albumFormCount}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                if (!isNaN(value) && value >= 1 && value <= 500) {
+                  setAlbumFormCount(value);
+                }
+              }}
+              className="ms-2"
+              style={{ width: "70px" }}
+            />
+          </div>
+          {/* -----Numero Form Canzoni----- */}
+          <div className="dropdown-item d-flex align-items-center">
+            <Tippy
+              content="Numero massimo di upload per singola traccia"
+              placement="top"
+            >
+              <span>Form Song:</span>
+            </Tippy>
+            <input
+              type="number"
+              min="1"
+              max="500"
+              value={songFormCount}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                if (!isNaN(value) && value >= 1 && value <= 500) {
+                  setSongFormCount(value);
+                }
+              }}
+              className="ms-2"
+              style={{ width: "70px" }}
+            />
+          </div>
         </div>
       )}
 
