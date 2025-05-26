@@ -244,17 +244,25 @@ const Upload = () => {
       {/* 7.2 Step iniziale */}
       {step === "start" && (
         <div className="button-group">
-          <Button onClick={() => setStep("chooseGenre")} className="me-3">
+          <Button
+            onClick={() => setStep("chooseGenre")}
+            className="upload-page-btn me-3"
+          >
             Carica Album
           </Button>
-          <Button onClick={() => setStep("uploadSong")}>Carica Canzone</Button>
+          <Button
+            onClick={() => setStep("uploadSong")}
+            className="upload-page-btn"
+          >
+            Carica Canzone
+          </Button>
         </div>
       )}
 
       {/* 7.3 Scelta del genere */}
       {step === "chooseGenre" && (
-        <div>
-          <div className="d-flex gap-5 mb-3">
+        <div className="genre-choice">
+          <div className="d-flex gap-5 mb-3 justify-content-between">
             <h5 className="mb-0">Scegli un genere:</h5>
             <Button
               variant="outline-danger"
@@ -266,12 +274,12 @@ const Upload = () => {
           </div>
           {genres.map((genre) => (
             <Button
+              className="upload-page-btn m-1"
               key={genre.id}
               onClick={() => {
                 setSelectedGenre(genre);
                 setStep("uploadAlbum");
               }}
-              className="m-1"
             >
               {genre.name}
             </Button>
@@ -294,11 +302,26 @@ const Upload = () => {
               ❌
             </Button>
           </div>
+          <div className="info-box">
+            <p>
+              &bull; Compila i form con il nome dell’artista, il titolo, l’anno
+              e i file audio da caricare. <br />
+              &bull; Quando hai terminato, scorri fino in fondo alla pagina e
+              premi il pulsante <strong>Upload</strong> per avviare il
+              caricamento.
+              <br />
+              &bull; Non è necessario compilare tutte le schede: verranno
+              processate solo quelle complete.
+              <br />
+              &bull; Il numero di schede visibili può essere modificato dal menu{" "}
+              <strong>Impostazioni</strong> nella navbar.
+            </p>
+          </div>
 
           <div className="upload-cards-container">
             {albumForms.map((form, idx) => (
-              <div key={idx} className="upload-card mb-3 p-3 border rounded">
-                <h6>Album {idx + 1}</h6>
+              <div key={idx} className="upload-card mb-3 p-3">
+                <h5 className="text-center mb-1">Album {idx + 1}</h5>
                 <Form.Group>
                   <Form.Label>Artista</Form.Label>
                   <Form.Control
@@ -354,10 +377,15 @@ const Upload = () => {
               </div>
             ))}
           </div>
-
-          <Button variant="success" onClick={uploadAlbumsSequentially}>
-            Upload
-          </Button>
+          <div className="text-center">
+            <Button
+              className="fs-4"
+              variant="success"
+              onClick={uploadAlbumsSequentially}
+            >
+              Upload
+            </Button>
+          </div>
         </div>
       )}
 
