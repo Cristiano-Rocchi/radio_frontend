@@ -38,7 +38,8 @@ const Upload = () => {
   // 2.3 Form album e canzoni
   const AlbumNumberForms = 20; // Numero di form per gli album
 
-  const { albumFormCount, songFormCount } = useContext(SettingsContext);
+  const { albumFormCount, songFormCount, darkMode } =
+    useContext(SettingsContext);
 
   const [albumForms, setAlbumForms] = useState(() =>
     Array.from({ length: albumFormCount }, () => ({
@@ -238,9 +239,29 @@ const Upload = () => {
       }
     }
   };
+
+  const getAlbumCardStatus = (form) => {
+    const isEmpty =
+      !form.artist &&
+      !form.title &&
+      !form.year &&
+      (!form.files || form.files.length === 0);
+
+    if (isEmpty) return "empty";
+
+    const isComplete =
+      form.artist &&
+      form.title &&
+      form.year &&
+      form.files &&
+      form.files.length > 0;
+
+    return isComplete ? "complete" : "incomplete";
+  };
+
   // 7. Render
   return (
-    <div className="upload-page">
+    <div className={`upload-page ${darkMode ? "dark-mode" : ""}`}>
       {/* 7.2 Step iniziale */}
       {step === "start" && (
         <div className="button-group">
@@ -290,18 +311,22 @@ const Upload = () => {
       {/* 7.4 Upload Album */}
       {step === "uploadAlbum" && (
         <div>
-          <div className="d-flex gap-5 mb-3">
-            <h5 className="mb-0">
-              Upload Album - Genere: {selectedGenre.name}
-            </h5>
+          <div className="mb-3">
+            {" "}
             <Button
+              className="mb-2"
               variant="outline-danger"
               size="sm"
               onClick={() => setStep("chooseGenre")}
             >
               ❌
             </Button>
+            <h5 className="mb-0">
+              Genere Selezionato:{" "}
+              <strong>{selectedGenre.name.replaceAll("_", " ")}</strong>
+            </h5>
           </div>
+
           <div className="info-box">
             <p>
               &bull; Compila i form con il nome dell’artista, il titolo, l’anno
@@ -319,64 +344,71 @@ const Upload = () => {
           </div>
 
           <div className="upload-cards-container">
-            {albumForms.map((form, idx) => (
-              <div key={idx} className="upload-card mb-3 p-3">
-                <h5 className="text-center mb-1">Album {idx + 1}</h5>
-                <Form.Group>
-                  <Form.Label>Artista</Form.Label>
-                  <Form.Control
-                    value={form.artist}
-                    onChange={(e) =>
-                      handleAlbumChange(idx, "artist", e.target.value)
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Titolo</Form.Label>
-                  <Form.Control
-                    value={form.title}
-                    onChange={(e) =>
-                      handleAlbumChange(idx, "title", e.target.value)
-                    }
-                  />
-                </Form.Group>
+            {albumForms.map((form, idx) => {
+              const cardStatus = getAlbumCardStatus(form);
+              return (
+                <div key={idx} className={`upload-card mb-3 p-3 ${cardStatus}`}>
+                  <h5 className="text-center mb-1">Album {idx + 1}</h5>
 
-                <Form.Group>
-                  <Form.Label>Anno</Form.Label>
-                  <Form.Control
-                    value={form.year}
-                    onChange={(e) =>
-                      handleAlbumChange(idx, "year", e.target.value)
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Files</Form.Label>
-                  <Form.Control
-                    type="file"
-                    multiple
-                    onChange={(e) =>
-                      handleAlbumChange(
-                        idx,
-                        "files",
-                        Array.from(e.target.files)
-                      )
-                    }
-                  />
-                </Form.Group>
+                  <Form.Group>
+                    <Form.Label>Artista</Form.Label>
+                    <Form.Control
+                      value={form.artist}
+                      onChange={(e) =>
+                        handleAlbumChange(idx, "artist", e.target.value)
+                      }
+                    />
+                  </Form.Group>
 
-                <div className="mt-2">
-                  {form.status === "uploading" && (
-                    <Spinner animation="border" size="sm" className="me-2" />
-                  )}
-                  {form.status === "uploading" && "Upload in corso..."}
-                  {form.status === "queued" && "In coda"}
-                  {form.status === "success" && "✅ Upload completato"}
-                  {form.status === "error" && "❌ Errore"}
+                  <Form.Group>
+                    <Form.Label>Titolo</Form.Label>
+                    <Form.Control
+                      value={form.title}
+                      onChange={(e) =>
+                        handleAlbumChange(idx, "title", e.target.value)
+                      }
+                    />
+                  </Form.Group>
+
+                  <Form.Group>
+                    <Form.Label>Anno</Form.Label>
+                    <Form.Control
+                      value={form.year}
+                      onChange={(e) =>
+                        handleAlbumChange(idx, "year", e.target.value)
+                      }
+                    />
+                  </Form.Group>
+
+                  <Form.Group>
+                    <Form.Label>Files</Form.Label>
+                    <Form.Control
+                      type="file"
+                      multiple
+                      onChange={(e) =>
+                        handleAlbumChange(
+                          idx,
+                          "files",
+                          Array.from(e.target.files)
+                        )
+                      }
+                    />
+                  </Form.Group>
+
+                  <div className="mt-2">
+                    {form.status === "uploading" && (
+                      <Spinner animation="border" size="sm" className="me-2" />
+                    )}
+                    {form.status === "uploading" && "Upload in corso..."}
+                    {form.status === "queued" && "In coda"}
+                    {form.status === "success" && "✅ Upload completato"}
+                    {form.status === "error" && "❌ Errore"}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
           <div className="text-center">
             <Button
               className="fs-4"
@@ -392,15 +424,44 @@ const Upload = () => {
       {/* 7.5 Upload Canzoni */}
       {step === "uploadSong" && (
         <div>
-          <div className="d-flex gap-5 mb-3">
-            <h5 className="mb-0">Upload Canzoni</h5>
+          <div className=" mb-3">
+            {" "}
             <Button
+              className="mb-2"
               variant="outline-danger"
               size="sm"
               onClick={() => setStep("start")}
             >
               ❌
             </Button>
+            <div className="d-flex">
+              {" "}
+              <h5 className="mb-0 ">Upload Canzoni</h5>
+              <p className="fst-italic border border-black rounded-circle d-inline-block p-1 ms-3">
+                info
+              </p>
+            </div>
+          </div>
+          <div className="info-box">
+            <p>
+              &bull; Compila i form selezionando un <strong>genere</strong> tra
+              quelli disponibili e un <strong>album</strong> a cui associare la
+              traccia. Puoi digitare per cercare rapidamente il nome dell’album.
+              <br />
+              &bull; Carica il <strong>file audio</strong> e, se vuoi, aggiungi
+              anche un <strong>rating</strong> (da 1 a 100), un{" "}
+              <strong>livello</strong> (da 1 a 10) e un{" "}
+              <strong>sottogenere</strong>.<br />
+              &bull; Quando hai terminato, scorri fino in fondo alla pagina e
+              premi il pulsante <strong>Upload</strong> per avviare il
+              caricamento.
+              <br />
+              &bull; Non è necessario compilare tutte le schede: verranno
+              processate solo quelle complete.
+              <br />
+              &bull; Il numero di schede visibili può essere modificato dal menu{" "}
+              <strong>Impostazioni</strong> nella navbar.
+            </p>
           </div>
           <div className="upload-cards-container">
             {songForms.map((form, idx) => (
