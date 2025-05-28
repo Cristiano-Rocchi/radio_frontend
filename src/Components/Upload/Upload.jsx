@@ -17,7 +17,7 @@
 //   6.2 uploadSongsSequentially
 // ==============================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Upload.css";
 import { Button, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
@@ -64,6 +64,7 @@ const Upload = () => {
       status: "ready",
     }))
   );
+  const songFileRefs = useRef([]);
 
   // 2.4 Aggiunta Genere
   const [showAddGenre, setShowAddGenre] = useState(false);
@@ -127,6 +128,12 @@ const Upload = () => {
     );
   }, [songFormCount]);
 
+  useEffect(() => {
+    songFileRefs.current = songForms.map(
+      (_, i) => songFileRefs.current[i] ?? React.createRef()
+    );
+  }, [songForms]);
+
   // 4. Fetch dati
 
   // 4.1 fetchGenres
@@ -167,7 +174,14 @@ const Upload = () => {
   // 5.2 handleSongChange
   const handleSongChange = (index, field, value) => {
     const updated = [...songForms];
-    updated[index][field] = value;
+
+    if (field === "genreId") {
+      updated[index].genreId = value;
+      updated[index].albumId = ""; // reset album selezionato
+    } else {
+      updated[index][field] = value;
+    }
+
     setSongForms(updated);
   };
 
@@ -588,31 +602,54 @@ const Upload = () => {
                     }
                   >
                     <option value="">Seleziona un album</option>
-                    {albums.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.title}
-                      </option>
-                    ))}
+                    {albums
+                      .filter((a) => String(a.genreId) === String(form.genreId))
+                      .sort((a, b) => a.title.localeCompare(b.title))
+
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.title} – {a.artist}
+                        </option>
+                      ))}
                   </Form.Select>
                 </Form.Group>
+
                 <Form.Group>
                   <Form.Label>Rating (opzionale)</Form.Label>
                   <Form.Control
+                    type="number"
+                    min="1"
+                    max="10"
                     value={form.rating}
-                    onChange={(e) =>
-                      handleSongChange(idx, "rating", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleSongChange(
+                        idx,
+                        "rating",
+                        val === "" ? "" : parseInt(val)
+                      );
+                    }}
                   />
                 </Form.Group>
+
                 <Form.Group>
                   <Form.Label>Level (opzionale)</Form.Label>
                   <Form.Control
+                    type="number"
+                    min="1"
+                    max="100"
                     value={form.level}
-                    onChange={(e) =>
-                      handleSongChange(idx, "level", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleSongChange(
+                        idx,
+                        "level",
+                        val === "" ? "" : parseInt(val)
+                      );
+                    }}
                   />
                 </Form.Group>
+
                 <Form.Group>
                   <Form.Label>Subgenere (opzionale)</Form.Label>
                   <Form.Control
@@ -624,13 +661,37 @@ const Upload = () => {
                 </Form.Group>
                 <Form.Group>
                   <Form.Label>File</Form.Label>
-                  <Form.Control
-                    type="file"
-                    onChange={(e) =>
-                      handleSongChange(idx, "file", e.target.files[0])
-                    }
-                  />
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Control
+                      ref={(el) => (songFileRefs.current[idx] = el)}
+                      type="file"
+                      onChange={(e) =>
+                        handleSongChange(idx, "file", e.target.files[0])
+                      }
+                    />
+                    {form.file && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => {
+                          handleSongChange(idx, "file", null);
+                          if (songFileRefs.current[idx]) {
+                            songFileRefs.current[idx].value = null;
+                          }
+                        }}
+                        title="Rimuovi file selezionato"
+                      >
+                        ❌
+                      </Button>
+                    )}
+                  </div>
+                  {form.file && (
+                    <Form.Text className="text-muted">
+                      File selezionato: {form.file.name}
+                    </Form.Text>
+                  )}
                 </Form.Group>
+
                 <div className="mt-2">
                   {form.status === "uploading" && (
                     <Spinner animation="border" size="sm" className="me-2" />
