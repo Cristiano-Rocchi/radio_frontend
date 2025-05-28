@@ -95,7 +95,7 @@ const MyNavbar = () => {
     >
       {/* === 4.1 File === */}
       <div className="menu-item ms-1" onClick={() => toggleMenu("file")}>
-        File
+        Naviga
         {openMenu === "file" && (
           <div className="dropdown dropdown-file">
             <Link to="/" className="dropdown-item">

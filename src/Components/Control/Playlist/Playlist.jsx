@@ -64,6 +64,8 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { useContext } from "react";
 import { SettingsContext } from "../../Settings/SettingsContext";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
 
 // 2. Stato e riferimenti
 const Playlist = () => {
@@ -594,7 +596,7 @@ const Playlist = () => {
       <Container fluid>
         <Row>
           {/*9.1 -------------Colonna 1: Playlist salvate--------------- */}
-          <Col xs={3} className="playlist-column-left">
+          <Col xs={2} className="playlist-column-left">
             <h5 className="text-center">Playlist Salvate</h5>
             <p
               className="add-playlist text-primary"
@@ -621,7 +623,7 @@ const Playlist = () => {
           </Col>
 
           {/*9.2 -----------Colonna 2: Tracce della playlist----------------- */}
-          <Col xs={6} className="playlist-column-center">
+          <Col xs={7} className="playlist-column-center">
             {expandedPlaylists.length > 0 &&
               savedPlaylists
                 .filter((pl) => expandedPlaylists.includes(pl.id))
@@ -648,10 +650,10 @@ const Playlist = () => {
                         <>
                           <h5 className="mb-0 me-2">{playlist.name}</h5>
                           <button
-                            className="btn btn-outline-secondary border-0 btn-sm"
+                            className="btn btn-outline-secondary btn-sm"
                             onClick={() => startEditingName(playlist)}
                           >
-                            ✏️
+                            ✏️Modifica nome
                           </button>
                         </>
                       )}
@@ -666,7 +668,7 @@ const Playlist = () => {
                         variant={
                           reorderMode[playlist.id]
                             ? "success"
-                            : "outline-secondary"
+                            : "outline-primary"
                         }
                         size="sm"
                         onClick={() => {
@@ -719,7 +721,7 @@ const Playlist = () => {
                         🗑️ Elimina playlist
                       </Button>
                     </div>
-                    <table className="table table-striped">
+                    <table className="table table-striped playlist-table">
                       <thead>
                         <tr>
                           <th>#</th>
@@ -884,7 +886,7 @@ const Playlist = () => {
                           key={song.id}
                           className="list-group-item d-flex justify-content-between align-items-center"
                         >
-                          <div>
+                          <div className="d-flex align-items-center">
                             <input
                               type="checkbox"
                               className="form-check-input me-2"
@@ -894,7 +896,37 @@ const Playlist = () => {
                               onChange={() => handleToggleTrack(song)}
                             />
                             🎵 {song.titolo}
+                            <Tippy
+                              content={
+                                <div className="tippy-playlist">
+                                  <div>
+                                    <strong>Artista:</strong>{" "}
+                                    {song.albumArtist || "-"}
+                                  </div>
+                                  <div>
+                                    <strong>Album:</strong>{" "}
+                                    {song.albumTitle || "-"}
+                                  </div>
+                                </div>
+                              }
+                              placement="top"
+                              theme="light-border"
+                              delay={[150, 0]}
+                              appendTo={document.body}
+                            >
+                              <span
+                                style={{
+                                  cursor: "help",
+                                  marginLeft: "6px",
+                                  fontSize: "14px",
+                                  userSelect: "none",
+                                }}
+                              >
+                                ℹ️
+                              </span>
+                            </Tippy>
                           </div>
+
                           <Badge bg="secondary">
                             {song.duration ? `${song.duration} sec` : "N/A"}
                           </Badge>
@@ -1011,7 +1043,7 @@ const Playlist = () => {
                 key={track.id}
                 className="list-group-item d-flex justify-content-between align-items-center"
               >
-                <div>
+                <div className="d-flex align-items-center">
                   <input
                     type="checkbox"
                     className="form-check-input me-2"
@@ -1024,8 +1056,36 @@ const Playlist = () => {
                       );
                     }}
                   />
-                  {track.titolo}
+                  🎵 {track.titolo}
+                  <Tippy
+                    content={
+                      <div className="tippy-playlist">
+                        <div>
+                          <strong>Artista:</strong> {track.albumArtist || "-"}
+                        </div>
+                        <div>
+                          <strong>Album:</strong> {track.albumTitle || "-"}
+                        </div>
+                      </div>
+                    }
+                    placement="top"
+                    theme="light-border"
+                    delay={[150, 0]}
+                    appendTo={document.body}
+                  >
+                    <span
+                      style={{
+                        cursor: "help",
+                        marginLeft: "6px",
+                        fontSize: "14px",
+                        userSelect: "none",
+                      }}
+                    >
+                      ℹ️
+                    </span>
+                  </Tippy>
                 </div>
+
                 <Badge bg="secondary">
                   {track.duration ? `${track.duration} sec` : "N/A"}
                 </Badge>
