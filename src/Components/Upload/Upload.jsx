@@ -23,6 +23,8 @@ import { Button, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { SettingsContext } from "../Settings/SettingsContext";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
 
 // 2. Stato e costanti iniziali
 
@@ -62,6 +64,34 @@ const Upload = () => {
       status: "ready",
     }))
   );
+
+  // 2.4 Aggiunta Genere
+  const [showAddGenre, setShowAddGenre] = useState(false);
+  const [newGenreName, setNewGenreName] = useState("");
+
+  const handleAddGenre = async () => {
+    if (!newGenreName.trim()) return;
+
+    const formatted = newGenreName.trim().toUpperCase().replaceAll(" ", "_");
+
+    try {
+      const response = await fetch("http://localhost:3001/genre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: formatted }),
+      });
+
+      if (response.ok) {
+        setNewGenreName("");
+        setShowAddGenre(false);
+        fetchGenres(); // aggiorna la lista
+      } else {
+        console.error("Errore aggiunta genere");
+      }
+    } catch (err) {
+      console.error("Errore di rete", err);
+    }
+  };
 
   // 3. Effetti iniziali
   useEffect(() => {
@@ -262,7 +292,7 @@ const Upload = () => {
   // 7. Render
   return (
     <div className={`upload-page ${darkMode ? "dark-mode" : ""}`}>
-      {/* 7.2 Step iniziale */}
+      {/* 7.1 Bottoni iniziali */}
       {step === "start" && (
         <div className="button-group">
           <Button
@@ -273,9 +303,41 @@ const Upload = () => {
           </Button>
           <Button
             onClick={() => setStep("uploadSong")}
-            className="upload-page-btn"
+            className="upload-page-btn me-3"
           >
-            Carica Canzone
+            Carica Traccia Audio
+          </Button>
+          <Button
+            className="upload-page-btn"
+            onClick={() => setStep("addGenre")}
+          >
+            Aggiungi Genere
+          </Button>
+        </div>
+      )}
+      {/* 7.2 Aggiungi Genere */}
+
+      {step === "addGenre" && (
+        <div className="genre-choice">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="mb-0">Aggiungi Nuovo Genere</h5>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={() => setStep("start")}
+            >
+              ❌
+            </Button>
+          </div>
+          <Form.Control
+            type="text"
+            value={newGenreName}
+            onChange={(e) => setNewGenreName(e.target.value)}
+            placeholder="Es. techno hardcore"
+            className="mb-2"
+          />
+          <Button size="sm" variant="success" onClick={handleAddGenre}>
+            Aggiungi
           </Button>
         </div>
       )}
@@ -321,26 +383,44 @@ const Upload = () => {
             >
               ❌
             </Button>
-            <h5 className="mb-0">
-              Genere Selezionato:{" "}
-              <strong>{selectedGenre.name.replaceAll("_", " ")}</strong>
-            </h5>
-          </div>
-
-          <div className="info-box">
-            <p>
-              &bull; Compila i form con il nome dell’artista, il titolo, l’anno
-              e i file audio da caricare. <br />
-              &bull; Quando hai terminato, scorri fino in fondo alla pagina e
-              premi il pulsante <strong>Upload</strong> per avviare il
-              caricamento.
-              <br />
-              &bull; Non è necessario compilare tutte le schede: verranno
-              processate solo quelle complete.
-              <br />
-              &bull; Il numero di schede visibili può essere modificato dal menu{" "}
-              <strong>Impostazioni</strong> nella navbar.
-            </p>
+            <div className="d-flex">
+              {" "}
+              <h5 className="mb-0">
+                Genere Selezionato:{" "}
+                <strong>{selectedGenre.name.replaceAll("_", " ")}</strong>
+              </h5>
+              <Tippy
+                placement="right"
+                interactive={true}
+                theme="light-border"
+                delay={[200, 0]}
+                content={
+                  <div className="info-box">
+                    <p>
+                      &bull; Compila i form con il nome dell’artista, il titolo,
+                      l’anno e i file audio da caricare. <br />
+                      <br />
+                      &bull; Quando hai terminato, scorri fino in fondo alla
+                      pagina e premi il pulsante <strong>Upload</strong> per
+                      avviare il caricamento.
+                      <br /> <br />
+                      &bull; Non è necessario compilare tutte le schede:
+                      verranno processate solo quelle complete.
+                      <br /> <br />
+                      &bull; Il numero di schede visibili può essere modificato
+                      dal menu <strong>Impostazioni</strong> nella navbar.
+                    </p>
+                    <br />
+                    &bull; Le schede arancioni indicano che sono incomplete,
+                    quelle verdi sono complete e quelle grigie sono vuote.
+                  </div>
+                }
+              >
+                <p className="fst-italic border border-black rounded-circle d-inline-block p-1 ms-3">
+                  info
+                </p>
+              </Tippy>
+            </div>
           </div>
 
           <div className="upload-cards-container">
@@ -436,33 +516,49 @@ const Upload = () => {
             </Button>
             <div className="d-flex">
               {" "}
-              <h5 className="mb-0 ">Upload Canzoni</h5>
-              <p className="fst-italic border border-black rounded-circle d-inline-block p-1 ms-3">
-                info
-              </p>
+              <h5 className="mb-0 ">Upload Traccie Audio</h5>
+              <Tippy
+                placement="right"
+                interactive={true}
+                theme="light-border"
+                delay={[200, 0]}
+                content={
+                  <div className="info-box m-0">
+                    <p>
+                      &bull; Compila i form selezionando un{" "}
+                      <strong>genere</strong> tra quelli disponibili e un{" "}
+                      <strong>album</strong> a cui associare la traccia. Puoi
+                      digitare per cercare rapidamente il nome dell’album.
+                      <br />
+                      <br />
+                      &bull; Carica il <strong>file audio</strong> e, se vuoi,
+                      aggiungi anche un <strong>rating</strong> (da 1 a 100), un{" "}
+                      <strong>livello</strong> (da 1 a 10) e un{" "}
+                      <strong>sottogenere</strong>.
+                      <br />
+                      <br />
+                      &bull; Quando hai terminato, scorri fino in fondo alla
+                      pagina e premi il pulsante <strong>Upload</strong> per
+                      avviare il caricamento.
+                      <br />
+                      <br />
+                      &bull; Non è necessario compilare tutte le schede:
+                      verranno processate solo quelle complete.
+                      <br />
+                      <br />
+                      &bull; Il numero di schede visibili può essere modificato
+                      nel menu <strong>Impostazioni</strong> nella navbar.
+                    </p>
+                  </div>
+                }
+              >
+                <p className="fst-italic border border-black rounded-circle d-inline-block p-1 ms-3">
+                  info
+                </p>
+              </Tippy>
             </div>
           </div>
-          <div className="info-box">
-            <p>
-              &bull; Compila i form selezionando un <strong>genere</strong> tra
-              quelli disponibili e un <strong>album</strong> a cui associare la
-              traccia. Puoi digitare per cercare rapidamente il nome dell’album.
-              <br />
-              &bull; Carica il <strong>file audio</strong> e, se vuoi, aggiungi
-              anche un <strong>rating</strong> (da 1 a 100), un{" "}
-              <strong>livello</strong> (da 1 a 10) e un{" "}
-              <strong>sottogenere</strong>.<br />
-              &bull; Quando hai terminato, scorri fino in fondo alla pagina e
-              premi il pulsante <strong>Upload</strong> per avviare il
-              caricamento.
-              <br />
-              &bull; Non è necessario compilare tutte le schede: verranno
-              processate solo quelle complete.
-              <br />
-              &bull; Il numero di schede visibili può essere modificato dal menu{" "}
-              <strong>Impostazioni</strong> nella navbar.
-            </p>
-          </div>
+
           <div className="upload-cards-container">
             {songForms.map((form, idx) => (
               <div key={idx} className="upload-card mb-3 p-3 border rounded">
