@@ -16,14 +16,19 @@
 // 7. Azioni
 //   7.1 Elimina album
 //   7.2 Salva canzone
+//   7.3 Modifica album
 // 8. Utility
 //   8.1 Filtra album per genere
 // 9. Render
+//   9.1 Colonna 1: Generi (sempre visibile)
+//   9.2 Colonna 2: Contenuto dinamico (Album | Artista)
 // ==============================
 
 import React, { useEffect, useState } from "react";
 import "./Database.css";
-import { Button, Badge } from "react-bootstrap";
+import { Button, Badge, Nav, Row, Col, Container } from "react-bootstrap";
+import ModalSongs from "./Modal/ModalSongs";
+import ModalAlbumEdit from "./Modal/ModalAlbumEdit";
 
 // 2. Stato
 const Database = () => {
@@ -36,6 +41,14 @@ const Database = () => {
   const [artistQuery, setArtistQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [editingSongs, setEditingSongs] = useState({});
+  const [activeTab, setActiveTab] = useState("album"); // 'album' | 'artista'
+  const [showAlbumModal, setShowAlbumModal] = useState(false);
+  const [albumInEdit, setAlbumInEdit] = useState(null);
+  const [editedAlbum, setEditedAlbum] = useState({
+    title: "",
+    artist: "",
+    date: "",
+  });
 
   // 3. Effetti
   useEffect(() => {
@@ -83,6 +96,7 @@ const Database = () => {
   // 5.2 Selezione album
   const handleSelectAlbum = (album) => {
     setSelectedAlbum(album);
+    setShowAlbumModal(true);
   };
 
   // 5.3 Torna agli album
@@ -219,257 +233,206 @@ const Database = () => {
     : albums;
 
   // 9. Render
-  return (
-    <div className="database">
-      {/* Barra dei Generi (nascosta quando cerchi) */}
-      {searchQuery.trim() === "" && artistQuery.trim() === "" && (
-        <div className="genres-bar mb-3">
-          {genres.map((genre) => (
-            <Button
-              key={genre.id}
-              variant={
-                selectedGenre?.id === genre.id ? "primary" : "outline-primary"
-              }
-              className="genre-btn"
-              onClick={() => handleSelectGenre(genre)}
-            >
-              {genre.name}
-            </Button>
-          ))}
-        </div>
-      )}
+  return activeTab === "album" ? (
+    <div className="database p-3">
+      <Nav
+        variant="tabs"
+        activeKey={activeTab}
+        onSelect={(k) => setActiveTab(k)}
+        className="mb-3"
+      >
+        <Nav.Item>
+          <Nav.Link eventKey="album">Album</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="artista">Artista</Nav.Link>
+        </Nav.Item>
+      </Nav>
+      <Container fluid>
+        <Row>
+          {/* -------------9.1 Colonna 1: Generi------------- */}
+          <Col md={2} className="genres-bar mb-3">
+            <div className="mb-3 text-center">
+              <h5>GENERI</h5>
+            </div>
 
-      {/* 🔍 Input di ricerca titolo */}
-      <div className="d-flex mb-3">
-        <input
-          type="text"
-          className="form-control me-2"
-          placeholder="Cerca album per nome..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-      </div>
-
-      {/* 🔍 Input di ricerca artista */}
-      <div className="d-flex mb-3">
-        <input
-          type="text"
-          className="form-control me-2"
-          placeholder="Cerca album per artista..."
-          value={artistQuery}
-          onChange={handleArtistSearchChange}
-        />
-      </div>
-
-      {/* Navigazione */}
-      {selectedGenre &&
-        searchQuery.trim() === "" &&
-        artistQuery.trim() === "" && (
-          <div className="navigation mb-3">
-            <small className="d-flex">
-              <strong>Navigazione:</strong>{" "}
-              <span className="nav-link" onClick={() => setSelectedGenre(null)}>
-                Tutti i Generi
-              </span>{" "}
-              {">"} {selectedGenre.name}
-              {selectedAlbum && (
-                <>
-                  {" "}
-                  {">"}{" "}
-                  <span className="nav-link" onClick={handleBackToAlbums}>
-                    {selectedAlbum.title}
-                  </span>
-                </>
-              )}
-            </small>
-          </div>
-        )}
-
-      {/* Risultati ricerca */}
-      {(searchQuery.trim() !== "" || artistQuery.trim() !== "") && (
-        <div className="search-results mb-4">
-          {searchResults.length > 0 ? (
-            <>
-              <h6>Risultati ricerca:</h6>
-              <div className="albums-container">
-                {searchResults.map((album) => (
-                  <div
-                    key={album.id}
-                    className="album-box position-relative"
-                    onClick={() => handleSelectAlbum(album)}
-                  >
-                    <button
-                      className="delete-btn"
-                      onClick={(e) => {
-                        e.stopPropagation(); // ⚠️ Previene il click sulla scheda
-                        handleDeleteAlbum(album.id, album.title);
-                      }}
-                    >
-                      ❌
-                    </button>
-                    📁 <div>{album.title}</div>
-                    <small className="text-muted">{album.artist}</small>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-muted">Nessun album trovato.</p>
-          )}
-        </div>
-      )}
-
-      {/* Visualizza tutti gli album solo se NON stai cercando */}
-      {searchQuery.trim() === "" &&
-        artistQuery.trim() === "" &&
-        !selectedAlbum && (
-          <div className="albums-container">
-            {genreFilteredAlbums.length > 0 ? (
-              genreFilteredAlbums.map((album) => (
-                <div
-                  key={album.id}
-                  className="album-box position-relative"
-                  onClick={() => handleSelectAlbum(album)}
-                >
-                  <button
-                    className="delete-btn"
-                    onClick={(e) => {
-                      e.stopPropagation(); // ⚠️ Previene il click sulla scheda
-                      handleDeleteAlbum(album.id, album.title);
-                    }}
-                  >
-                    ❌
-                  </button>
-                  📁 <div>{album.title}</div>
-                  <small className="text-muted">{album.artist}</small>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted">Nessun album disponibile.</p>
-            )}
-          </div>
-        )}
-
-      {/* Dettaglio album */}
-      {selectedAlbum && (
-        <div>
-          <h6>Album: {selectedAlbum.title}</h6>
-          {selectedAlbum.songs && selectedAlbum.songs.length > 0 ? (
-            <ul className="list-group">
-              {selectedAlbum.songs.map((song) => {
-                const isEditing = editingSongs[song.id]?.isEditing || false;
-                const editedRating =
-                  editingSongs[song.id]?.editedRating ?? song.rating ?? 0;
-                const editedLevel =
-                  editingSongs[song.id]?.editedLevel ?? song.level ?? 0;
-                const editedTitle =
-                  editingSongs[song.id]?.editedTitle ?? song.titolo ?? "";
-
-                const handleEditClick = () => {
-                  if (isEditing) {
-                    // Salva i dati
-                    handleSaveSong(
-                      song.id,
-                      editedRating,
-                      editedLevel,
-                      editedTitle
-                    );
-                  } else {
-                    // Mette in modalità modifica
-                    setEditingSongs((prev) => ({
-                      ...prev,
-                      [song.id]: {
-                        isEditing: true,
-                        editedTitle: song.titolo ?? "",
-                        editedRating: song.rating ?? 0,
-                        editedLevel: song.level ?? 0,
-                      },
-                    }));
+            <div className="d-flex ">
+              {genres.map((genre) => (
+                <Button
+                  key={genre.id}
+                  variant={
+                    selectedGenre?.id === genre.id
+                      ? "primary"
+                      : "outline-primary"
                   }
-                };
+                  className="genre-btn"
+                  onClick={() => handleSelectGenre(genre)}
+                >
+                  {genre.name}
+                </Button>
+              ))}
+            </div>
+          </Col>
+          {/* -----------9.2 Colonna 2: DATABASE CONTENUTO----------- */}
+          <Col md={9}>
+            {/* Search bars & title */}
+            <div className="database-search-bars">
+              <div className="ms-3 d-flex">
+                {" "}
+                <h4>DATABASE</h4>
+                <div className="d-flex ms-auto me-5">
+                  <input
+                    type="text"
+                    className="form-control me-2"
+                    placeholder="Cerca album per nome..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                  />
+                  <input
+                    type="text"
+                    className="form-control me-2"
+                    placeholder="Cerca album per artista..."
+                    value={artistQuery}
+                    onChange={handleArtistSearchChange}
+                  />
+                </div>
+              </div>
+            </div>
 
-                const handleInputChange = (field, value) => {
-                  setEditingSongs((prev) => ({
-                    ...prev,
-                    [song.id]: {
-                      ...prev[song.id],
-                      [field]: value,
-                    },
-                  }));
-                };
-
-                return (
-                  <li
-                    key={song.id}
-                    className="list-group-item d-flex justify-content-between align-items-center flex-wrap"
-                  >
-                    <div>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editingSongs[song.id]?.editedTitle}
-                          onChange={(e) =>
-                            handleInputChange("editedTitle", e.target.value)
-                          }
-                          style={{ width: "200px", marginRight: "10px" }}
-                        />
-                      ) : (
-                        <>🎵 {song.titolo} </>
-                      )}
-                      <Badge bg="secondary" className="me-2">
-                        {song.duration ? `${song.duration} sec` : "Durata N/A"}
-                      </Badge>
-
-                      <Badge bg="info" className="me-2">
-                        Rating:{" "}
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            min="0"
-                            max="10"
-                            value={editedRating}
-                            onChange={(e) =>
-                              handleInputChange("editedRating", e.target.value)
-                            }
-                            style={{ width: "50px", marginLeft: "5px" }}
-                          />
-                        ) : (
-                          song.rating ?? 0
-                        )}
-                      </Badge>
-                      <Badge bg="warning" className="me-2">
-                        Level:{" "}
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={editedLevel}
-                            onChange={(e) =>
-                              handleInputChange("editedLevel", e.target.value)
-                            }
-                            style={{ width: "60px", marginLeft: "5px" }}
-                          />
-                        ) : (
-                          song.level ?? 0
-                        )}
-                      </Badge>
+            {/* Risultati ricerca */}
+            {(searchQuery.trim() !== "" || artistQuery.trim() !== "") && (
+              <div className="search-results mb-4">
+                {searchResults.length > 0 ? (
+                  <>
+                    <h6>Risultati ricerca:</h6>
+                    <div className="albums-container">
+                      {searchResults.map((album) => (
+                        <div
+                          key={album.id}
+                          className="album-box position-relative"
+                          onClick={() => handleSelectAlbum(album)}
+                        >
+                          <button
+                            className="delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAlbum(album.id, album.title);
+                            }}
+                          >
+                            ❌
+                          </button>
+                          <button
+                            className="edit-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAlbumInEdit(album);
+                              setEditedAlbum({
+                                title: album.title,
+                                artist: album.artist,
+                                date: album.date,
+                              });
+                            }}
+                          >
+                            ✏️
+                          </button>
+                          📁 <div>{album.title}</div>
+                          <small className="text-muted">{album.artist}</small>
+                        </div>
+                      ))}
                     </div>
-                    <button
-                      className="btn btn-sm btn-outline-primary mt-2"
-                      onClick={handleEditClick}
+                  </>
+                ) : (
+                  <p className="text-muted">Nessun album trovato.</p>
+                )}
+              </div>
+            )}
+
+            {/* Visualizza tutti gli album (solo se NON stai cercando */}
+            {searchQuery.trim() === "" && artistQuery.trim() === "" && (
+              <div className="albums-container">
+                {genreFilteredAlbums.length > 0 ? (
+                  genreFilteredAlbums.map((album) => (
+                    <div
+                      key={album.id}
+                      className="album-box position-relative"
+                      onClick={() => handleSelectAlbum(album)}
                     >
-                      {isEditing ? "Salva" : "Modifica"}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="text-muted">Nessuna traccia disponibile.</p>
-          )}
-        </div>
+                      <button
+                        className="delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAlbum(album.id, album.title);
+                        }}
+                      >
+                        ❌
+                      </button>
+                      <button
+                        className="edit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAlbumInEdit(album);
+                          setEditedAlbum({
+                            title: album.title,
+                            artist: album.artist,
+                            date: album.date,
+                          });
+                        }}
+                      >
+                        ✏️
+                      </button>
+                      📁 <div>{album.title}</div>
+                      <small className="text-muted">{album.artist}</small>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted">Nessun album disponibile.</p>
+                )}
+              </div>
+            )}
+          </Col>
+        </Row>
+      </Container>
+      {/* Modale per visualizzare trcce dell'album */}
+      {showAlbumModal && selectedAlbum && (
+        <ModalSongs
+          selectedAlbum={selectedAlbum}
+          editingSongs={editingSongs}
+          handleSaveSong={handleSaveSong}
+          setEditingSongs={setEditingSongs}
+          onClose={() => setShowAlbumModal(false)}
+        />
       )}
+      {/* Modale per modificare l'album */}
+      {albumInEdit && (
+        <ModalAlbumEdit
+          albumInEdit={albumInEdit}
+          editedAlbum={editedAlbum}
+          setEditedAlbum={setEditedAlbum}
+          setAlbumInEdit={setAlbumInEdit}
+          setAlbums={setAlbums}
+          setSearchResults={setSearchResults}
+        />
+      )}
+    </div>
+  ) : (
+    <div className="database p-3">
+      <Nav
+        variant="tabs"
+        activeKey={activeTab}
+        onSelect={(k) => setActiveTab(k)}
+        className="mb-3"
+      >
+        <Nav.Item>
+          <Nav.Link eventKey="album">Album</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="artista">Artista</Nav.Link>
+        </Nav.Item>
+      </Nav>
+
+      <div className="p-4">
+        <h5>Sezione Artista in lavorazione...</h5>
+      </div>
     </div>
   );
 };
