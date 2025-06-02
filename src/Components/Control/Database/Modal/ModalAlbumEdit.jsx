@@ -8,6 +8,8 @@
 
 // 1. Import
 import React from "react";
+import { useContext } from "react";
+import { SettingsContext } from "../../../Settings/SettingsContext";
 
 // 2. Props
 const ModalAlbumEdit = ({
@@ -18,6 +20,7 @@ const ModalAlbumEdit = ({
   setAlbums,
   setSearchResults,
 }) => {
+  const { darkMode } = useContext(SettingsContext);
   if (!albumInEdit) return null;
 
   // 3. Funzione handleSave
@@ -56,7 +59,7 @@ const ModalAlbumEdit = ({
 
   // 4. Render JSX
   return (
-    <div className="modal-edit-album">
+    <div className={`modal-edit-album ${darkMode ? "dark-mode" : ""}`}>
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h5 className="mb-0">Modifica Album</h5>
         <button

@@ -5,14 +5,24 @@
 }
 
 /* search-bars */
-.database .database-search-bars .form-control {
+.database .form-control {
   width: 50%;
   border: 1px solid black;
   border-radius: 1px;
 }
 
-/* Colonna Generi */
+/* Colonna GENERI */
+.database .genre-btn {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  height: 50px;
 
+  background-color: #ededed !important;
+  border-color: black !important;
+  color: black !important;
+
+  border-radius: 2px !important;
+}
 .database .genres-bar {
   border-right: 1px solid black;
 }
@@ -20,19 +30,11 @@
   display: inline;
 }
 
-.database .genre-btn {
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-  height: 50px;
-}
-
-.database .navigation .nav-link {
-  cursor: pointer;
-  color: #0d6efd;
-  text-decoration: underline;
-}
-
 /* Colonna Database ALBUM */
+.genre-box {
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
 .database .albums-container {
   display: flex;
@@ -42,15 +44,11 @@
   overflow-y: auto;
 }
 .database .album-box {
-  border: 1px solid #ddd;
   padding: 0.4rem;
   margin: 0.5rem;
-  width: 210px;
-  height: 90px;
+  width: 150px;
   text-align: center;
   cursor: pointer;
-  border-radius: 8px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
 
@@ -101,6 +99,46 @@
   display: block !important;
 }
 
+/* Colonna Database ARTISTI */
+
+.artists-box {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.artist-card {
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  width: 30%;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.artist-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+.artist-card .album-table-row {
+  padding-top: 20px;
+  border-bottom: 1px solid black;
+}
+.artist-card .album-table-row h6 {
+  font-size: 0.9em;
+}
+
+.artist-card .album-table-row p {
+  font-size: 0.8em;
+  font-weight: bolder;
+}
+.artist-card .album-table-row:hover {
+  transform: scale(1.1);
+  background-color: #e0e0e0;
+  border: 1px solid black;
+}
+
 /*---------------- MODALI -----------------*/
 /* Modal per l'editing degli album */
 .modal-edit-album {
@@ -119,15 +157,111 @@
 .modal-songs {
   font-size: 0.9em;
   position: fixed;
-  top: 17%;
+  top: 23%;
   right: 0%;
 
-  max-height: 80vh;
+  max-height: 75vh;
   overflow-y: auto;
   background: white;
   border: 2px solid #ccc;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   padding: 15px;
-  z-index: 9999;
+  z-index: 99999;
   border-radius: 8px;
+}
+
+/* 🌙 Modalità Notte */
+
+.database.dark-mode {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}
+
+/* Colonna sinistra (generi) */
+.database.dark-mode .genres-bar {
+  border-right: 1px solid #666;
+}
+
+.database.dark-mode .genre-btn {
+  background-color: #2c2c2c !important;
+  color: #f1f1f1 !important;
+  border-color: #f1f1f1 !important;
+}
+
+/* Schede album */
+.database.dark-mode .album-box {
+  background-color: #2c2c2c;
+  color: #f1f1f1;
+  border: 1px solid #f1f1f1;
+}
+
+/* Schede artisti */
+.database.dark-mode .artist-card {
+  background-color: #2c2c2c;
+  color: #f1f1f1;
+  border-color: #f1f1f1;
+}
+
+.database.dark-mode .artist-card .album-table-row:hover {
+  background-color: #333;
+  border-color: #90ee90;
+}
+
+/* Input */
+.database.dark-mode .form-control {
+  background-color: #333;
+  color: #f1f1f1;
+  border: 1px solid #666;
+}
+
+.database.dark-mode .text-muted {
+  color: #ccc !important;
+}
+/* placeholder nei form */
+.database.dark-mode ::placeholder {
+  color: #ccc !important;
+  opacity: 1;
+}
+
+/* Modali */
+/* Modal edit album */
+.modal-edit-album.dark-mode {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+  border-color: #999;
+}
+.modal-edit-album.dark-mode input {
+  background-color: #2c2c2c;
+  color: #f1f1f1;
+  border: 1px solid #555;
+}
+.modal-edit-album.dark-mode .btn-success {
+  background-color: #3c3c3c;
+  color: #90ee90;
+  border: 1px solid #90ee90;
+}
+
+/* Modal songs */
+.modal-songs.dark-mode {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+  border-color: #999;
+}
+
+.modal-songs.dark-mode input {
+  background-color: #2c2c2c;
+  color: #f1f1f1;
+  border: 1px solid #555;
+}
+/* Lista canzoni nel modale */
+.modal-songs.dark-mode .list-group-item {
+  background-color: #2a2a2a;
+  color: #f1f1f1;
+  border-color: #444;
+}
+
+.modal-songs.dark-mode .list-group-item input {
+  background-color: #333;
+  color: #f1f1f1;
+  border: 1px solid #555;
 }

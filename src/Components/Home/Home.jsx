@@ -32,7 +32,6 @@ import ExitLive from "../Home/ExitLive";
 const Home = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  console.log("🚀 Home component montato");
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
 

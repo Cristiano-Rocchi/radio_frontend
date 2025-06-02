@@ -1,6 +1,7 @@
-// ModalSongs.jsx
 import React from "react";
 import { Badge, Button } from "react-bootstrap";
+import { useContext } from "react";
+import { SettingsContext } from "../../../Settings/SettingsContext";
 
 const ModalSongs = ({
   album,
@@ -9,6 +10,7 @@ const ModalSongs = ({
   setEditingSongs,
   onClose,
 }) => {
+  const { darkMode } = useContext(SettingsContext);
   if (!album) return null;
 
   const handleInputChange = (songId, field, value) => {
@@ -22,7 +24,7 @@ const ModalSongs = ({
   };
 
   return (
-    <div className="modal-songs">
+    <div className={`modal-songs ${darkMode ? "dark-mode" : ""}`}>
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h5 className="mb-0">Album: {album.title}</h5>
         <Button variant="outline-danger" size="sm" onClick={onClose}>
