@@ -21,7 +21,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Home.css";
 import { Button, Col, Container, Row } from "react-bootstrap";
-import Homeimg from "../../Assets/Img/home.png";
+import Homeimg from "../../Assets/Img/home-res5.png";
 import Homeimg2 from "../../Assets/Img/home2.png";
 import { Link, Navigate } from "react-router-dom";
 import ReactHowler from "react-howler";
@@ -250,7 +250,7 @@ const Home = () => {
       ) : (
         <Container fluid className="home-container p-0 m-0">
           <Row>
-            <Col xs={12}>
+            <Col xs={12} className="col-home">
               <div className="card-home position-relative">
                 <img className="first" src={Homeimg} alt="" />
                 <img src={Homeimg2} className="second" alt="" />
@@ -292,14 +292,14 @@ const Home = () => {
                             ></div>
                           )}
                         </div>
-                        <span>{currentTrack.level} %</span>
+                        <span className="fs-1">{currentTrack.level} %</span>
                       </div>
                     )}
                     <h2 className="ms-4">Rating</h2>
                     {currentTrack && (
                       <div className="rating-skulls ms-4 mt-2">
                         {renderSkulls(currentTrack.rating)}{" "}
-                        <span>{currentTrack.rating}</span>
+                        <span className="fs-1">{currentTrack.rating}</span>
                       </div>
                     )}
                   </div>
@@ -310,13 +310,6 @@ const Home = () => {
                   {previousTrack ? (
                     <h4 className="ms-4">
                       <span>Prev</span> {previousTrack.titolo}
-                    </h4>
-                  ) : (
-                    <h4></h4>
-                  )}
-                  {nextTrack ? (
-                    <h4 className="me-4">
-                      <span>Next</span> {nextTrack.titolo}
                     </h4>
                   ) : (
                     <h4></h4>
@@ -336,6 +329,20 @@ const Home = () => {
 
           <Row>
             <Col xs={12}>
+              <h2
+                className="text-center mt-4 mb-2"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  const elem = document.querySelector(".col-home");
+                  if (elem && elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                  } else if (elem && elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                  }
+                }}
+              >
+                FULLSCREEN
+              </h2>
               <div className="playlist-home border border-2">
                 <h5>Playlist disponibili</h5>
                 {playlists.map((playlist) => (
