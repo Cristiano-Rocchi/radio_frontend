@@ -38,6 +38,13 @@ a {
   top: 100%;
   left: 55px;
 }
+.dropdown-help {
+  top: 100%;
+  left: 155px;
+}
+.dropdown-help .dropdown-item {
+  cursor: default;
+}
 
 .dropdown-item {
   padding: 4px 12px;
@@ -96,6 +103,12 @@ input:checked + .slider::before {
   transform: translateX(15px);
 }
 
+.tippy-box {
+  color: black;
+  border: 1px solid #ccc;
+  font-size: 12px;
+}
+
 /* --------Dark mode------ */
 .dark-mode .dropdown,
 .dark-mode .dropdown-item {
@@ -106,4 +119,9 @@ input:checked + .slider::before {
 .dark-mode .dropdown-item:hover,
 .dark-mode .menu-item:hover {
   background-color: #444;
+}
+.tippy-box[data-theme~="dark"] {
+  background-color: #333;
+  color: white;
+  border: 1px solid #666;
 }

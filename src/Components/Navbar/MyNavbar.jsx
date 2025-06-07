@@ -8,6 +8,9 @@
 //   3.3 Gestione input: startLiveTime
 //   3.4 Gestione input: phraseDelay
 // 4. Render navbar con dropdown
+//   4.1 Naviga
+//   4.2 Menu Modifica
+//   4.3 Menu Aiuto
 // ==============================
 
 import React, { useState, useEffect, useRef, useContext } from "react";
@@ -93,13 +96,13 @@ const MyNavbar = () => {
         darkMode ? "dark-mode" : ""
       }`}
     >
-      {/* === 4.1 File === */}
+      {/* === 4.1 Naviga === */}
       <div className="menu-item ms-1" onClick={() => toggleMenu("file")}>
         Naviga
         {openMenu === "file" && (
           <div className="dropdown dropdown-file">
             <Link to="/" className="dropdown-item">
-              Home
+              Radio
             </Link>
             <Link to="/playlist" className="dropdown-item">
               Playlist
@@ -114,9 +117,9 @@ const MyNavbar = () => {
         )}
       </div>
 
-      {/* === 4.2 Menu Impostazioni === */}
+      {/* === 4.2 Menu Modifica === */}
       <div className="menu-item" onClick={() => toggleMenu("settings")}>
-        Impostazioni
+        Modifica
       </div>
 
       {openMenu === "settings" && (
@@ -140,7 +143,11 @@ const MyNavbar = () => {
 
           {/*---Timer ----*/}
 
-          <Tippy content="Regola timer dello start prelive" placement="top">
+          <Tippy
+            content="Regola timer dello start prelive"
+            placement="top"
+            theme={darkMode ? "dark" : "light"}
+          >
             <div className="dropdown-item d-flex align-items-center ">
               Timer Start Live:
               <input
@@ -161,6 +168,7 @@ const MyNavbar = () => {
             <Tippy
               content="Intervallo tra una frase e l'altra durante il pre-live"
               placement="top"
+              theme={darkMode ? "dark" : "light"}
             >
               <span>Phrase Delay:</span>
             </Tippy>
@@ -182,6 +190,7 @@ const MyNavbar = () => {
             <Tippy
               content="Numero massimo di upload per gli album"
               placement="top"
+              theme={darkMode ? "dark" : "light"}
             >
               <span>Form Album:</span>
             </Tippy>
@@ -205,6 +214,7 @@ const MyNavbar = () => {
             <Tippy
               content="Numero massimo di upload per singola traccia"
               placement="top"
+              theme={darkMode ? "dark" : "light"}
             >
               <span>Form Song:</span>
             </Tippy>
@@ -227,7 +237,18 @@ const MyNavbar = () => {
       )}
 
       {/* === 4.3 Menu Aiuto === */}
-      <div className="menu-item">?</div>
+      <div className="menu-item" onClick={() => toggleMenu("help")}>
+        ?
+      </div>
+
+      {openMenu === "help" && (
+        <div className="dropdown dropdown-help">
+          <div className="dropdown-item">
+            Formato consigliato per le immagini: <strong>1024×1024</strong>{" "}
+            pixel.
+          </div>
+        </div>
+      )}
     </div>
   );
 };

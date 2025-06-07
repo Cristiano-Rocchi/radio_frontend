@@ -30,14 +30,17 @@
 }
 
 .info h1 {
-  font-size: 50px;
+  font-size: 70px;
+  letter-spacing: 2px;
 }
+
 .info h3 {
-  font-size: 50px;
+  font-size: 60px;
+  letter-spacing: 2px;
 }
 .info .data {
   font-family: "data", "sans-serif";
-  font-size: 40px;
+  font-size: 50px;
 }
 
 .info h3 span {
@@ -52,19 +55,23 @@
 
 /* RATING E LEVEL */
 
+.info .rating {
+  font-size: 40px;
+}
+.info .level {
+  font-size: 40px;
+}
+
 .bar-wrapper h2 {
   font-family: "rating", sans-serif;
   letter-spacing: 4px;
-  font-size: 45px;
+  font-size: 40px;
 }
-.bar-wrapper span {
-  font-size: 30px;
-  letter-spacing: 0px;
-}
+
 .hidden-gem-bar-wrapper {
   position: relative;
   width: 100%;
-  max-width: 420px;
+  max-width: 410px;
   height: 32px;
   background-color: #444;
   border-radius: 4px;
@@ -131,18 +138,16 @@
   font-family: "font", sans-serif;
 }
 .song-animation {
-  display: flex;
   gap: 3px;
-  height: 30px;
 }
 
 .song-animation .bar {
-  width: 30px;
+  width: 25px;
   background: #862d7d;
   animation: bounce 0.8s infinite alternate;
 }
 
-/* Creiamo animazioni sfalsate per ogni barra */
+/* animazioni sfalsate per ogni barra */
 .song-animation .bar:nth-child(1) {
   animation-delay: 0s;
 }
@@ -172,5 +177,22 @@
 
 /* ------SEZIONE PLAYLIST------- */
 .playlist-home {
-  margin-top: 100px;
+}
+.navigation-home button {
+  background-color: #ededed !important;
+  border-color: black !important;
+  color: black !important;
+
+  border-radius: 2px !important;
+}
+.navigation-home button:hover {
+  background-color: #e6e6e6 !important;
+  border-color: green !important;
+  color: green !important;
+}
+/* Gestione Fullscreen */
+.fullscreen-mode .playlist-home,
+.fullscreen-mode .navigation-home,
+.fullscreen-mode h2.text-center {
+  display: none !important;
 }

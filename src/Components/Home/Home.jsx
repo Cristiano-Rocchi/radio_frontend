@@ -6,6 +6,7 @@
 //   3.1 Caricamento playlist
 //   3.2 Caricamento info album
 //   3.3 Cleanup timer
+//   3.4 Gestione fullscreen
 // 4. Gestione player
 //   4.1 Selezione playlist
 //   4.2 Start con countdown
@@ -44,6 +45,9 @@ const Home = () => {
 
   const [currentTrack, setCurrentTrack] = useState(null);
   const [showExit, setShowExit] = useState(false);
+
+  const [shouldGoFullscreen, setShouldGoFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Playlist attiva e tracce prev/next
   const currentPlaylist =
@@ -105,6 +109,19 @@ const Home = () => {
     };
   }, [currentTrack]);
 
+  // 3.4 Gestione fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fs = document.fullscreenElement !== null;
+      setIsFullscreen(fs);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   // 4.1 Selezione playlist
   const handleSelectPlaylist = (id) => {
     const playlist = playlists.find((p) => p.id === id);
@@ -125,6 +142,18 @@ const Home = () => {
     )
       return;
 
+    // Richiesta fullscreen SUBITO nel contesto del click utente
+    const elem = document.documentElement; // o un container specifico se vuoi
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch((err) => {
+        console.warn("Fullscreen error:", err);
+      });
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+
     setPendingTrack(currentPlaylist.tracks[0]);
     setShowCountdown(true);
   };
@@ -136,6 +165,19 @@ const Home = () => {
       setCurrentTrack(pendingTrack);
       setIsPlaying(true);
       setPendingTrack(null);
+    }
+
+    // Entra in fullscreen se richiesto
+    if (shouldGoFullscreen) {
+      const elem = document.documentElement; // tutto il documento
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+      setShouldGoFullscreen(false);
     }
   };
 
@@ -248,13 +290,37 @@ const Home = () => {
       ) : showExit ? (
         <ExitLive />
       ) : (
-        <Container fluid className="home-container p-0 m-0">
+        <Container
+          fluid
+          className={`home-container p-0 m-0 ${
+            isFullscreen ? "fullscreen-mode" : ""
+          }`}
+        >
           <Row>
             <Col xs={12} className="col-home">
+              {/*-------- SEZIONE Grafica --------*/}
               <div className="card-home position-relative">
                 <img className="first" src={Homeimg} alt="" />
                 <img src={Homeimg2} className="second" alt="" />
-                {/* SEZIONE INFO */}
+                {/* TRACK INDEX */}
+                <div className="track-index position-absolute d-flex justify-content-between align-items-center">
+                  {previousTrack ? (
+                    <h4 className="ms-4">
+                      <span>Prev</span> {previousTrack.titolo}
+                    </h4>
+                  ) : (
+                    <h4></h4>
+                  )}
+                </div>
+                {/* ANIMAZIONE */}
+                <div className="animation-index position-absolute d-flex justify-content-center align-items-center">
+                  <div className="song-animation d-flex align-items-end">
+                    {[...Array(13)].map((_, idx) => (
+                      <div key={idx} className="bar"></div>
+                    ))}
+                  </div>
+                </div>
+                {/*-------- SEZIONE INFO --------*/}
                 <div className="info position-absolute d-flex flex-column justify-content-between ">
                   <div className="mt-4 ">
                     <h1 className="text-center">
@@ -292,57 +358,37 @@ const Home = () => {
                             ></div>
                           )}
                         </div>
-                        <span className="fs-1">{currentTrack.level} %</span>
+                        <span className="level">{currentTrack.level} %</span>
                       </div>
                     )}
                     <h2 className="ms-4">Rating</h2>
                     {currentTrack && (
                       <div className="rating-skulls ms-4 mt-2">
                         {renderSkulls(currentTrack.rating)}{" "}
-                        <span className="fs-1">{currentTrack.rating}</span>
+                        <span className="rating">{currentTrack.rating}</span>
                       </div>
                     )}
                   </div>
                 </div>
-
-                {/* TRACK INDEX */}
-                <div className="track-index position-absolute d-flex justify-content-between align-items-center">
-                  {previousTrack ? (
-                    <h4 className="ms-4">
-                      <span>Prev</span> {previousTrack.titolo}
-                    </h4>
-                  ) : (
-                    <h4></h4>
-                  )}
-                </div>
-              </div>
-
-              <div className="animation-index position-absolute d-flex justify-content-center align-items-center">
-                <div className="song-animation d-flex align-items-end">
-                  {[...Array(13)].map((_, idx) => (
-                    <div key={idx} className="bar"></div>
-                  ))}
-                </div>
               </div>
             </Col>
           </Row>
-
+          <h2
+            className="text-center mt-4 mb-2"
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              const elem = document.querySelector(".col-home");
+              if (elem && elem.requestFullscreen) {
+                elem.requestFullscreen();
+              } else if (elem && elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+              }
+            }}
+          >
+            FULLSCREEN
+          </h2>
           <Row>
-            <Col xs={12}>
-              <h2
-                className="text-center mt-4 mb-2"
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  const elem = document.querySelector(".col-home");
-                  if (elem && elem.requestFullscreen) {
-                    elem.requestFullscreen();
-                  } else if (elem && elem.webkitRequestFullscreen) {
-                    elem.webkitRequestFullscreen();
-                  }
-                }}
-              >
-                FULLSCREEN
-              </h2>
+            <Col xs={3}>
               <div className="playlist-home border border-2">
                 <h5>Playlist disponibili</h5>
                 {playlists.map((playlist) => (
@@ -359,7 +405,7 @@ const Home = () => {
                     />
 
                     <span className="ms-2">
-                      {playlist.name} ({playlist.totalDuration})
+                      {playlist.name} {playlist.totalDuration}
                     </span>
                   </div>
                 ))}
@@ -371,11 +417,23 @@ const Home = () => {
                 )}
               </div>
             </Col>
+            <Col xs={4}>
+              <div className="navigation-home border border-2 p-5">
+                <div className="d-flex gap-2">
+                  <Link to="/playlist">
+                    <Button>Playlist Page</Button>
+                  </Link>
+                  <Link to="/database">
+                    <Button>Database Page</Button>
+                  </Link>
+                  <Link to="/upload">
+                    <Button>Upload Page</Button>
+                  </Link>
+                </div>
+              </div>
+            </Col>
+            <Col xs={5}>Sezione Controllo</Col>
           </Row>
-
-          <Link to="/playlist">
-            <Button>Playlist Page</Button>
-          </Link>
 
           {currentTrack && (
             <ReactHowler
