@@ -22,7 +22,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Home.css";
 import { Button, Col, Container, Row } from "react-bootstrap";
-import Homeimg from "../../Assets/Img/home-res5.png";
+import Homeimg from "../../Assets/Img/home1.png";
 import Homeimg2 from "../../Assets/Img/home2.png";
 import { Link, Navigate } from "react-router-dom";
 import ReactHowler from "react-howler";
