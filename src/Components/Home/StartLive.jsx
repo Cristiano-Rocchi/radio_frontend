@@ -13,7 +13,7 @@
 
 import React, { useEffect, useState, useRef, useContext } from "react";
 import "../Home/StartLive.css";
-import liveImage from "../../Assets/Img/home.png";
+import liveImage from "../../Assets/Img/home1.png";
 import introMusic from "../../Assets/Music/KRS-ONE---A-Friend-instrumental.mp3";
 import { SettingsContext } from "../Settings/SettingsContext";
 

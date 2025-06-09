@@ -7,7 +7,7 @@
 // ==============================
 
 import React, { useEffect, useRef } from "react";
-import liveImage from "../../Assets/Img/home.png";
+import liveImage from "../../Assets/Img/home1.png";
 import "./ExitLive.css";
 import exitMusic from "../../Assets/Music/Diversified-Culture---Have-You-Ever-Seen-(Instrumental).mp3";
 

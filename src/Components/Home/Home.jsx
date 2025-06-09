@@ -373,20 +373,25 @@ const Home = () => {
               </div>
             </Col>
           </Row>
-          <h2
-            className="text-center mt-4 mb-2"
-            style={{ cursor: "pointer" }}
-            onClick={() => {
-              const elem = document.querySelector(".col-home");
-              if (elem && elem.requestFullscreen) {
-                elem.requestFullscreen();
-              } else if (elem && elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-              }
-            }}
-          >
-            FULLSCREEN
-          </h2>
+          <div className="d-flex justify-content-center">
+            {" "}
+            <Button
+              variant="outline-secondary"
+              className="mt-5 mb-4 fs-3"
+              onClick={() => {
+                const elem = document.querySelector(".col-home");
+                if (elem && elem.requestFullscreen) {
+                  elem.requestFullscreen();
+                } else if (elem && elem.webkitRequestFullscreen) {
+                  elem.webkitRequestFullscreen();
+                }
+              }}
+            >
+              FULLSCREEN
+            </Button>
+          </div>
+
+          {/*-------- SEZIONE INFO --------*/}
           <Row>
             <Col xs={3}>
               <div className="playlist-home border border-2">

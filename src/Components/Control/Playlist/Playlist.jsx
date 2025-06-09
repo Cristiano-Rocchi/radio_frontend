@@ -66,6 +66,11 @@ import { useContext } from "react";
 import { SettingsContext } from "../../Settings/SettingsContext";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import TrackSelectionModal from "./Modal/TrackSelectionModal";
+import AddTrackModal from "./Modal/AddTrackModal";
+import PlaylistCol1 from "./Column/PlaylistCol1";
+import PlaylistCol2 from "./Column/PlaylistCol2";
+import PlaylistCol3 from "./Column/PlaylistCol3";
 
 // 2. Stato e riferimenti
 const Playlist = () => {
@@ -596,549 +601,87 @@ const Playlist = () => {
       <Container fluid>
         <Row>
           {/*9.1 -------------Colonna 1: Playlist salvate--------------- */}
-          <Col xs={2} className="playlist-column-left">
-            <h5 className="text-center">Playlist Salvate</h5>
-            <p
-              className="add-playlist text-primary"
-              style={{ cursor: "pointer" }}
-              onClick={() => {
-                setIsBuilding(true);
-                setSelectedTracks([]);
-                setSelectedAlbum(null);
-              }}
-            >
-              + Aggiungi nuova playlist
-            </p>
-            {savedPlaylists.map((playlist) => (
-              <div key={playlist.id} className="d-flex align-items-center mb-2">
-                <input
-                  type="radio"
-                  name="selectedPlaylist"
-                  checked={expandedPlaylists.includes(playlist.id)}
-                  onChange={() => togglePlaylist(playlist.id)}
-                />
-                <span className="ms-2">{playlist.name}</span>
-              </div>
-            ))}
-          </Col>
+          <PlaylistCol1
+            savedPlaylists={savedPlaylists}
+            expandedPlaylists={expandedPlaylists}
+            togglePlaylist={togglePlaylist}
+            setIsBuilding={setIsBuilding}
+            setSelectedTracks={setSelectedTracks}
+            setSelectedAlbum={setSelectedAlbum}
+          />
 
           {/*9.2 -----------Colonna 2: Tracce della playlist----------------- */}
-          <Col xs={7} className="playlist-column-center">
-            {expandedPlaylists.length > 0 &&
-              savedPlaylists
-                .filter((pl) => expandedPlaylists.includes(pl.id))
-                .map((playlist) => (
-                  <div key={playlist.id} className="saved-playlist">
-                    <div className="mb-2 d-flex align-items-center gap-3">
-                      {editingPlaylistId === playlist.id ? (
-                        <>
-                          <input
-                            type="text"
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
-                            className="form-control form-control-sm me-2"
-                            style={{ width: "200px" }}
-                          />
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => saveEditedName(playlist.id)}
-                          >
-                            OK
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <h5 className="mb-0 me-2">{playlist.name}</h5>
-                          <button
-                            className="btn btn-outline-secondary btn-sm"
-                            onClick={() => startEditingName(playlist)}
-                          >
-                            ✏️Modifica nome
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    <h5 className="fs-6">
-                      {" "}
-                      Durata: {getPlaylistDuration(playlist.tracks)}
-                    </h5>
-
-                    <div className="d-flex justify-content-start mb-2 mt-3 gap-3">
-                      <Button
-                        variant={
-                          reorderMode[playlist.id]
-                            ? "success"
-                            : "outline-primary"
-                        }
-                        size="sm"
-                        onClick={() => {
-                          if (reorderMode[playlist.id]) {
-                            // Salva ordine
-                            const updated = savedPlaylists.find(
-                              (pl) => pl.id === playlist.id
-                            );
-                            fetch(
-                              `http://localhost:3001/playlist/${playlist.id}/order`,
-                              {
-                                method: "PUT",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify(
-                                  updated.tracks.map((t) => t.id)
-                                ),
-                              }
-                            );
-                          }
-
-                          setReorderMode((prev) => ({
-                            ...prev,
-                            [playlist.id]: !prev[playlist.id],
-                          }));
-                        }}
-                      >
-                        {reorderMode[playlist.id]
-                          ? "💾 Salva ordine"
-                          : "📝 Modifica ordine"}
-                      </Button>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => {
-                          setShowAddTrackModal(true);
-                          setTracksToAdd([]);
-                          setTrackSearchQuery("");
-                          setTrackSearchResults([]);
-                          setPlaylistBeingEdited(playlist);
-                        }}
-                      >
-                        ➕ Aggiungi traccia
-                      </Button>
-
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleDeletePlaylist(playlist.id)}
-                      >
-                        🗑️ Elimina playlist
-                      </Button>
-                    </div>
-                    <table className="table table-striped playlist-table">
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Nome</th>
-                          <th>Artista</th>
-                          <th>Album</th>
-                          <th>Rating</th>
-                          <th>Level</th>
-                          <th>Durata</th>
-                          <th>Edit</th>
-                        </tr>
-                      </thead>
-                      {reorderMode[playlist.id] ? (
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={(event) => {
-                            const { active, over } = event;
-                            if (!over || active.id === over.id) return;
-
-                            const oldIndex = playlist.tracks.findIndex(
-                              (t) => t.id === active.id
-                            );
-                            const newIndex = playlist.tracks.findIndex(
-                              (t) => t.id === over.id
-                            );
-                            const reordered = arrayMove(
-                              playlist.tracks,
-                              oldIndex,
-                              newIndex
-                            );
-
-                            setSavedPlaylists((prev) =>
-                              prev.map((pl) =>
-                                pl.id === playlist.id
-                                  ? { ...pl, tracks: reordered }
-                                  : pl
-                              )
-                            );
-                          }}
-                        >
-                          <SortableContext
-                            items={playlist.tracks.map((t) => t.id)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            <tbody>
-                              {playlist.tracks.map((track, index) => (
-                                <SortableRow key={track.id} id={track.id}>
-                                  {renderTrackRow(track, index, playlist)}
-                                </SortableRow>
-                              ))}
-                            </tbody>
-                          </SortableContext>
-                        </DndContext>
-                      ) : (
-                        <tbody>
-                          {playlist.tracks.map((track, index) => (
-                            <tr key={track.id}>
-                              {renderTrackRow(track, index, playlist)}
-                            </tr>
-                          ))}
-                        </tbody>
-                      )}
-                    </table>
-                  </div>
-                ))}
-          </Col>
+          <PlaylistCol2
+            savedPlaylists={savedPlaylists}
+            expandedPlaylists={expandedPlaylists}
+            editingPlaylistId={editingPlaylistId}
+            editedName={editedName}
+            setEditedName={setEditedName}
+            startEditingName={startEditingName}
+            saveEditedName={saveEditedName}
+            getPlaylistDuration={getPlaylistDuration}
+            reorderMode={reorderMode}
+            setReorderMode={setReorderMode}
+            setSavedPlaylists={setSavedPlaylists}
+            editingSongs={editingSongs}
+            setEditingSongs={setEditingSongs}
+            renderTrackRow={renderTrackRow}
+            handleDeletePlaylist={handleDeletePlaylist}
+          />
 
           {/*9.3--- Colonna 3: Builder nuova playlist */}
-          <Col xs={3} className="playlist-column-right">
-            {isBuilding && (
-              <div>
-                <input
-                  type="text"
-                  className="form-control mb-2"
-                  placeholder="Cerca per canzone..."
-                  value={songQuery}
-                  onChange={(e) => {
-                    setSongQuery(e.target.value);
-                    searchSongsByTitle(e.target.value);
-                  }}
-                />
-                <input
-                  type="text"
-                  className="form-control mb-2"
-                  placeholder="Cerca per artista..."
-                  value={artistQuery}
-                  onChange={handleArtistSearchChange}
-                />
-                <input
-                  type="text"
-                  className="form-control mb-2"
-                  placeholder="Cerca per album..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-
-                <div className="albums-container mb-3">
-                  {(searchQuery.trim() !== "" || artistQuery.trim() !== "") && (
-                    <div className="albums-container mb-3">
-                      {searchResults.map((album) => (
-                        <div key={album.id} className="mb-2">
-                          <div
-                            className="album-box"
-                            onClick={() => {
-                              setExpandedAlbumId((prev) =>
-                                prev === album.id ? null : album.id
-                              );
-                              setSelectedAlbum(album);
-                            }}
-                            style={{
-                              cursor: "pointer",
-                              border: "1px solid #ccc",
-                              padding: "5px",
-                            }}
-                          >
-                            📁 {album.title} <small>({album.artist})</small>
-                          </div>
-
-                          {expandedAlbumId === album.id &&
-                            album.songs &&
-                            album.songs.length > 0 && (
-                              <ul className="list-group mt-2">
-                                {album.songs.map((song) => (
-                                  <li
-                                    key={song.id}
-                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                  >
-                                    <div>
-                                      <input
-                                        type="checkbox"
-                                        className="form-check-input me-2"
-                                        checked={selectedTracks.some(
-                                          (t) => t.id === song.id
-                                        )}
-                                        onChange={() => handleToggleTrack(song)}
-                                      />
-                                      🎵 {song.titolo}
-                                    </div>
-                                    <Badge bg="secondary">
-                                      {song.duration
-                                        ? `${song.duration} sec`
-                                        : "N/A"}
-                                    </Badge>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {songQuery.trim() !== "" &&
-                  selectedAlbum &&
-                  selectedAlbum.songs &&
-                  selectedAlbum.songs.length > 0 && (
-                    <ul className="list-group mb-3">
-                      {selectedAlbum.songs.map((song) => (
-                        <li
-                          key={song.id}
-                          className="list-group-item d-flex justify-content-between align-items-center"
-                        >
-                          <div className="d-flex align-items-center">
-                            <input
-                              type="checkbox"
-                              className="form-check-input me-2"
-                              checked={selectedTracks.some(
-                                (t) => t.id === song.id
-                              )}
-                              onChange={() => handleToggleTrack(song)}
-                            />
-                            🎵 {song.titolo}
-                            <Tippy
-                              content={
-                                <div className="tippy-playlist">
-                                  <div>
-                                    <strong>Artista:</strong>{" "}
-                                    {song.albumArtist || "-"}
-                                  </div>
-                                  <div>
-                                    <strong>Album:</strong>{" "}
-                                    {song.albumTitle || "-"}
-                                  </div>
-                                </div>
-                              }
-                              placement="top"
-                              theme="light-border"
-                              delay={[150, 0]}
-                              appendTo={document.body}
-                            >
-                              <span
-                                style={{
-                                  cursor: "help",
-                                  marginLeft: "6px",
-                                  fontSize: "14px",
-                                  userSelect: "none",
-                                }}
-                              >
-                                ℹ️
-                              </span>
-                            </Tippy>
-                          </div>
-
-                          <Badge bg="secondary">
-                            {song.duration ? `${song.duration} sec` : "N/A"}
-                          </Badge>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-              </div>
-            )}
-          </Col>
+          <PlaylistCol3
+            isBuilding={isBuilding}
+            songQuery={songQuery}
+            setSongQuery={setSongQuery}
+            searchSongsByTitle={searchSongsByTitle}
+            artistQuery={artistQuery}
+            setArtistQuery={setArtistQuery}
+            handleArtistSearchChange={handleArtistSearchChange}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearchChange={handleSearchChange}
+            searchResults={searchResults}
+            expandedAlbumId={expandedAlbumId}
+            setExpandedAlbumId={setExpandedAlbumId}
+            setSelectedAlbum={setSelectedAlbum}
+            selectedAlbum={selectedAlbum}
+            selectedTracks={selectedTracks}
+            handleToggleTrack={handleToggleTrack}
+          />
         </Row>
       </Container>
       {/*10.------------Modali------------------*/}
       {/* 10.1 Modale per tracce selezionate */}
       {showTrackModal && (
-        <div className="track-modal">
-          <h5>Tracce selezionate</h5>
-          <p>
-            <strong>Durata:</strong> {getTotalDuration()}
-          </p>
-          <ul className="list-group mb-3">
-            {selectedTracks.map((track, index) => (
-              <li
-                key={track.id}
-                className="list-group-item d-flex justify-content-between align-items-center"
-              >
-                <div>
-                  {index + 1}. {track.titolo}
-                </div>
-                <div>
-                  <span className="me-2">
-                    {track.duration ? `${track.duration} sec` : "N/A"}
-                  </span>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleRemoveTrack(track.id)}
-                  >
-                    ❌
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <label className="form-label">Nome playlist:</label>
-          <input
-            type="text"
-            className="form-control mb-2"
-            value={playlistName}
-            onChange={(e) => setPlaylistName(e.target.value)}
-          />
-
-          <Button
-            variant="success"
-            className="w-100"
-            onClick={handleSavePlaylist}
-          >
-            Salva
-          </Button>
-          <Button
-            variant="outline-secondary"
-            className="w-100 mt-2"
-            onClick={() => {
-              const confirm = window.confirm(
-                "Vuoi annullare la creazione della playlist?"
-              );
-              if (confirm) {
-                setSelectedTracks([]);
-                setPlaylistName("");
-                setSelectedAlbum(null);
-                setShowTrackModal(false);
-                setSongQuery("");
-                setSearchQuery("");
-                setArtistQuery("");
-              }
-            }}
-          >
-            Annulla
-          </Button>
-        </div>
+        <TrackSelectionModal
+          selectedTracks={selectedTracks}
+          setSelectedTracks={setSelectedTracks}
+          playlistName={playlistName}
+          setPlaylistName={setPlaylistName}
+          setSelectedAlbum={setSelectedAlbum}
+          setShowTrackModal={setShowTrackModal}
+          setSongQuery={setSongQuery}
+          setSearchQuery={setSearchQuery}
+          setArtistQuery={setArtistQuery}
+          handleSavePlaylist={handleSavePlaylist}
+        />
       )}
 
       {/*10.2 Modale per aggiungere tracce a una playlist */}
       {showAddTrackModal && playlistBeingEdited && (
-        <div className="track-modal">
-          <h5>Aggiungi tracce a: {playlistBeingEdited.name}</h5>
-          <input
-            type="text"
-            className="form-control mb-2"
-            placeholder="Cerca per nome..."
-            value={trackSearchQuery}
-            onChange={async (e) => {
-              const value = e.target.value;
-              setTrackSearchQuery(value);
-              if (value.trim().length > 1) {
-                const res = await fetch(
-                  `http://localhost:3001/song/search?title=${encodeURIComponent(
-                    value
-                  )}`
-                );
-                if (res.ok) {
-                  const data = await res.json();
-                  setTrackSearchResults(data);
-                }
-              } else {
-                setTrackSearchResults([]);
-              }
-            }}
-          />
-          <ul className="list-group mb-3">
-            {trackSearchResults.map((track) => (
-              <li
-                key={track.id}
-                className="list-group-item d-flex justify-content-between align-items-center"
-              >
-                <div className="d-flex align-items-center">
-                  <input
-                    type="checkbox"
-                    className="form-check-input me-2"
-                    checked={tracksToAdd.some((t) => t.id === track.id)}
-                    onChange={() => {
-                      setTracksToAdd((prev) =>
-                        prev.some((t) => t.id === track.id)
-                          ? prev.filter((t) => t.id !== track.id)
-                          : [...prev, track]
-                      );
-                    }}
-                  />
-                  🎵 {track.titolo}
-                  <Tippy
-                    content={
-                      <div className="tippy-playlist">
-                        <div>
-                          <strong>Artista:</strong> {track.albumArtist || "-"}
-                        </div>
-                        <div>
-                          <strong>Album:</strong> {track.albumTitle || "-"}
-                        </div>
-                      </div>
-                    }
-                    placement="top"
-                    theme="light-border"
-                    delay={[150, 0]}
-                    appendTo={document.body}
-                  >
-                    <span
-                      style={{
-                        cursor: "help",
-                        marginLeft: "6px",
-                        fontSize: "14px",
-                        userSelect: "none",
-                      }}
-                    >
-                      ℹ️
-                    </span>
-                  </Tippy>
-                </div>
-
-                <Badge bg="secondary">
-                  {track.duration ? `${track.duration} sec` : "N/A"}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-
-          <Button
-            variant="success"
-            className="w-100 mb-2"
-            onClick={async () => {
-              const updated = [...playlistBeingEdited.tracks, ...tracksToAdd];
-              setSavedPlaylists((prev) =>
-                prev.map((pl) =>
-                  pl.id === playlistBeingEdited.id
-                    ? { ...pl, tracks: updated }
-                    : pl
-                )
-              );
-
-              await fetch(
-                `http://localhost:3001/playlist/${playlistBeingEdited.id}/songs`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(tracksToAdd.map((t) => t.id)),
-                }
-              );
-
-              setShowAddTrackModal(false);
-              setTrackSearchQuery("");
-              setTrackSearchResults([]);
-              setTracksToAdd([]);
-              setPlaylistBeingEdited(null);
-            }}
-          >
-            OK
-          </Button>
-
-          <Button
-            variant="outline-secondary"
-            className="w-100"
-            onClick={() => {
-              setShowAddTrackModal(false);
-              setTracksToAdd([]);
-              setTrackSearchQuery("");
-              setTrackSearchResults([]);
-              setPlaylistBeingEdited(null);
-            }}
-          >
-            Annulla
-          </Button>
-        </div>
+        <AddTrackModal
+          playlistBeingEdited={playlistBeingEdited}
+          setPlaylistBeingEdited={setPlaylistBeingEdited}
+          setShowAddTrackModal={setShowAddTrackModal}
+          setTrackSearchQuery={setTrackSearchQuery}
+          trackSearchQuery={trackSearchQuery}
+          trackSearchResults={trackSearchResults}
+          setTrackSearchResults={setTrackSearchResults}
+          tracksToAdd={tracksToAdd}
+          setTracksToAdd={setTracksToAdd}
+          setSavedPlaylists={setSavedPlaylists}
+        />
       )}
     </div>
   );
