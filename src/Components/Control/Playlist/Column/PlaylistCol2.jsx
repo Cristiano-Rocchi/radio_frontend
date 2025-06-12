@@ -52,6 +52,8 @@ const PlaylistCol2 = ({
   setEditingSongs,
   renderTrackRow,
   handleDeletePlaylist,
+  setShowAddTrackModal,
+  setPlaylistBeingEdited,
 }) => {
   return (
     <Col xs={7} className="playlist-column-center">
@@ -99,6 +101,17 @@ const PlaylistCol2 = ({
 
               {/* Azioni playlist */}
               <div className="d-flex justify-content-start mb-2 mt-3 gap-3">
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={() => {
+                    setPlaylistBeingEdited(playlist);
+                    setShowAddTrackModal(true);
+                  }}
+                >
+                  ➕ Aggiungi traccia
+                </Button>
+
                 <Button
                   variant={
                     reorderMode[playlist.id] ? "success" : "outline-primary"

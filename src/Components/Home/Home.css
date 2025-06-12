@@ -27,6 +27,7 @@
   height: 100vh;
   right: 0;
   width: 45%;
+  color: rgb(228, 211, 236);
 }
 
 .info h1 {
@@ -195,4 +196,57 @@
 .fullscreen-mode .navigation-home,
 .fullscreen-mode h2.text-center {
   display: none !important;
+}
+
+/* ------SEZIONE SKIT------- */
+.skit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #1d143d;
+  z-index: 9999;
+  opacity: 1;
+  animation: fadeInOut 3s ease-in-out forwards;
+}
+
+.skit-logo {
+  width: 350px;
+  height: auto;
+  animation: logoFadeInOut 2.85s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes logoFadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }

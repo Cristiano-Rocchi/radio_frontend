@@ -627,6 +627,8 @@ const Playlist = () => {
             setEditingSongs={setEditingSongs}
             renderTrackRow={renderTrackRow}
             handleDeletePlaylist={handleDeletePlaylist}
+            setShowAddTrackModal={setShowAddTrackModal}
+            setPlaylistBeingEdited={setPlaylistBeingEdited}
           />
 
           {/*9.3--- Colonna 3: Builder nuova playlist */}

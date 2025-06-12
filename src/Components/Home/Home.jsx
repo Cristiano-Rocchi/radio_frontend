@@ -28,6 +28,8 @@ import { Link, Navigate } from "react-router-dom";
 import ReactHowler from "react-howler";
 import StartLive from "../Home/StartLive";
 import ExitLive from "../Home/ExitLive";
+import Logo from "../../Assets/Img/logo.png";
+import Skit from "../../Assets/Music/radio_pizzamafia_skit.mp3";
 
 // 2. Stato e riferimenti
 const Home = () => {
@@ -48,6 +50,10 @@ const Home = () => {
 
   const [shouldGoFullscreen, setShouldGoFullscreen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [virtualQueue, setVirtualQueue] = useState([]);
+
+  const [showSkitOverlay, setShowSkitOverlay] = useState(false);
+  const [currentVirtualIndex, setCurrentVirtualIndex] = useState(0);
 
   // Playlist attiva e tracce prev/next
   const currentPlaylist =
@@ -55,7 +61,11 @@ const Home = () => {
 
   const currentIdx =
     currentPlaylist?.tracks && Array.isArray(currentPlaylist.tracks)
-      ? currentPlaylist.tracks.findIndex((t) => t.id === currentTrack?.id)
+      ? currentPlaylist.tracks.findIndex((t) =>
+          currentTrack && currentTrack !== "skit"
+            ? t.id === currentTrack.track.id
+            : false
+        )
       : -1;
 
   const previousTrack =
@@ -71,6 +81,23 @@ const Home = () => {
       : null;
 
   const [albumInfo, setAlbumInfo] = useState(null);
+
+  // 2.2 Costruzione della coda virtuale
+  const buildVirtualQueue = (tracks) => {
+    const queue = [];
+    // Skit iniziale
+    queue.push({ isSkit: true });
+    for (let i = 0; i < tracks.length; i++) {
+      queue.push({ isSkit: false, track: tracks[i] });
+
+      // numero di skit ogni tracce
+      const isNotLast = i < tracks.length - 1;
+      if ((i + 1) % 5 === 0 && isNotLast) {
+        queue.push({ isSkit: true });
+      }
+    }
+    return queue;
+  };
 
   // 3. Effetti
 
@@ -95,8 +122,13 @@ const Home = () => {
 
   // 3.2 Caricamento info album
   useEffect(() => {
-    if (currentTrack && currentTrack.albumId) {
-      fetchAlbum(currentTrack.albumId);
+    if (
+      currentTrack &&
+      currentTrack !== "skit" &&
+      currentTrack.track &&
+      currentTrack.track.albumId
+    ) {
+      fetchAlbum(currentTrack.track.albumId);
     }
   }, [currentTrack]);
 
@@ -142,8 +174,12 @@ const Home = () => {
     )
       return;
 
+    // Genera la coda con skit alternati
+    const virtual = buildVirtualQueue(currentPlaylist.tracks);
+    setVirtualQueue(virtual);
+
     // Richiesta fullscreen SUBITO nel contesto del click utente
-    const elem = document.documentElement; // o un container specifico se vuoi
+    const elem = document.documentElement;
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch((err) => {
         console.warn("Fullscreen error:", err);
@@ -154,7 +190,8 @@ const Home = () => {
       elem.msRequestFullscreen();
     }
 
-    setPendingTrack(currentPlaylist.tracks[0]);
+    // Imposta come primo elemento della coda lo skit o la prima traccia
+    setPendingTrack(virtual[0]);
     setShowCountdown(true);
   };
 
@@ -162,14 +199,22 @@ const Home = () => {
   const handleCountdownFinish = () => {
     setShowCountdown(false);
     if (pendingTrack) {
-      setCurrentTrack(pendingTrack);
+      // Trova la posizione del pendingTrack nella virtualQueue
+      const startIndex = virtualQueue.findIndex((item) =>
+        pendingTrack.isSkit
+          ? item.isSkit
+          : item.track?.id === pendingTrack.track?.id
+      );
+
+      setCurrentTrack(pendingTrack.isSkit ? "skit" : pendingTrack);
+      setCurrentVirtualIndex(startIndex); // 👈 salva la posizione nella queue
       setIsPlaying(true);
       setPendingTrack(null);
     }
 
     // Entra in fullscreen se richiesto
     if (shouldGoFullscreen) {
-      const elem = document.documentElement; // tutto il documento
+      const elem = document.documentElement;
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
       } else if (elem.webkitRequestFullscreen) {
@@ -183,6 +228,12 @@ const Home = () => {
 
   // 4.4 Fine traccia \(avanzamento\)
   const handleEnded = () => {
+    if (currentTrack === "skit") {
+      setTimeout(() => {
+        setShowSkitOverlay(false);
+      }, 3000);
+    }
+
     if (fadeTimerRef.current) {
       clearTimeout(fadeTimerRef.current);
       fadeTimerRef.current = null;
@@ -192,23 +243,16 @@ const Home = () => {
       stopTimerRef.current = null;
     }
 
-    if (!selectedPlaylistId) return;
-    const currentPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
+    if (!virtualQueue || virtualQueue.length === 0 || currentTrack === null) {
+      return;
+    }
 
-    if (!currentTrack || !currentPlaylist) return;
+    const nextIndex = currentVirtualIndex + 1;
+    const nextItem = virtualQueue[nextIndex];
 
-    const currentIdx = currentPlaylist.tracks.findIndex(
-      (t) => t.id === currentTrack.id
-    );
-
-    const nextTrack =
-      Array.isArray(currentPlaylist.tracks) && currentIdx >= 0
-        ? currentPlaylist.tracks[currentIdx + 1]
-        : null;
-
-    if (nextTrack) {
-      console.log("➡️ Passo alla traccia successiva:", nextTrack.titolo);
-      setCurrentTrack(nextTrack);
+    if (nextItem) {
+      setCurrentTrack(nextItem.isSkit ? "skit" : nextItem);
+      setCurrentVirtualIndex(nextIndex); // 🔁 aggiorna l'indice corrente
       setIsPlaying(true);
     } else {
       console.log("✅ Playlist finita");
@@ -220,6 +264,13 @@ const Home = () => {
   // 4.5 OnPlay \+ fade / stop
   const handleOnPlay = () => {
     console.log("▶️ Traccia in riproduzione");
+
+    // Se è uno skit
+    if (currentTrack === "skit") {
+      console.log("🎙️ È uno skit, nessun fade o taglio.");
+      setShowSkitOverlay(true); // mostra overlay
+      return;
+    }
 
     if (playerRef.current) {
       const sound = playerRef.current.howler;
@@ -300,11 +351,17 @@ const Home = () => {
             <Col xs={12} className="col-home">
               {/*-------- SEZIONE Grafica --------*/}
               <div className="card-home position-relative">
+                {showSkitOverlay && (
+                  <div className="skit-overlay fade-in-out d-flex justify-content-center align-items-center">
+                    <img src={Logo} alt="Logo" className="skit-logo" />
+                  </div>
+                )}
+
                 <img className="first" src={Homeimg} alt="" />
                 <img src={Homeimg2} className="second" alt="" />
                 {/* TRACK INDEX */}
                 <div className="track-index position-absolute d-flex justify-content-between align-items-center">
-                  {previousTrack ? (
+                  {previousTrack && currentTrack !== "skit" ? (
                     <h4 className="ms-4">
                       <span>Prev</span> {previousTrack.titolo}
                     </h4>
@@ -324,15 +381,19 @@ const Home = () => {
                 <div className="info position-absolute d-flex flex-column justify-content-between ">
                   <div className="mt-4 ">
                     <h1 className="text-center">
-                      {currentTrack ? currentTrack.titolo : "Titolo"}
+                      {currentTrack && currentTrack !== "skit"
+                        ? currentTrack.track.titolo
+                        : "Titolo"}
                     </h1>
-                    <h2 className="text-center data">
+                    <h3 className="text-center data">
                       {albumInfo ? albumInfo.date : "Data"}
-                    </h2>
+                    </h3>
 
                     <h3 className="ms-4 mt-5">
                       <span>Artist:</span>
-                      {albumInfo ? albumInfo.artist : "Artista"}
+                      {albumInfo && currentTrack !== "skit"
+                        ? albumInfo.artist
+                        : "Artista"}
                     </h3>
                     <h3 className="ms-4 mt-4">
                       <span>Album:</span>{" "}
@@ -341,31 +402,36 @@ const Home = () => {
                   </div>
                   <div className="mb-4 bar-wrapper">
                     <h2 className="ms-4">Hidden Gem Lvl</h2>
-                    {currentTrack && (
+                    {currentTrack && currentTrack !== "skit" && (
                       <div className="d-flex align-items-center ms-4 mt-2 mb-5">
                         <div className="hidden-gem-bar-wrapper me-3">
                           <div
                             className="hidden-gem-bar-fill"
-                            style={{ width: `${currentTrack.level}%` }}
+                            style={{ width: `${currentTrack.track.level}%` }}
                           ></div>
-                          {currentTrack.level < 100 && (
+                          {currentTrack.track.level < 100 && (
                             <div
                               className="hidden-gem-bar-red"
                               style={{
-                                left: `${currentTrack.level}%`,
-                                width: `${100 - currentTrack.level}%`,
+                                left: `${currentTrack.track.level}%`,
+                                width: `${100 - currentTrack.track.level}%`,
                               }}
                             ></div>
                           )}
                         </div>
-                        <span className="level">{currentTrack.level} %</span>
+                        <span className="level">
+                          {currentTrack.track.level} %
+                        </span>
                       </div>
                     )}
+
                     <h2 className="ms-4">Rating</h2>
-                    {currentTrack && (
+                    {currentTrack && currentTrack !== "skit" && (
                       <div className="rating-skulls ms-4 mt-2">
-                        {renderSkulls(currentTrack.rating)}{" "}
-                        <span className="rating">{currentTrack.rating}</span>
+                        {renderSkulls(currentTrack.track.rating)}
+                        <span className="rating">
+                          {currentTrack.track.rating}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -442,7 +508,9 @@ const Home = () => {
 
           {currentTrack && (
             <ReactHowler
-              src={currentTrack.presignedUrl}
+              src={
+                currentTrack === "skit" ? Skit : currentTrack.track.presignedUrl
+              }
               playing={isPlaying}
               volume={1.0}
               onPlay={handleOnPlay}
