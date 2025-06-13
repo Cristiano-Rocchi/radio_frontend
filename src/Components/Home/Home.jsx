@@ -144,8 +144,11 @@ const Home = () => {
   // 3.4 Gestione fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const fs = document.fullscreenElement !== null;
-      setIsFullscreen(fs);
+      const isFs = document.fullscreenElement !== null;
+      setIsFullscreen(isFs);
+
+      document.body.style.overflow = isFs ? "hidden" : "";
+      document.documentElement.style.overflow = isFs ? "hidden" : "";
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
@@ -269,6 +272,19 @@ const Home = () => {
     if (currentTrack === "skit") {
       console.log("🎙️ È uno skit, nessun fade o taglio.");
       setShowSkitOverlay(true); // mostra overlay
+
+      // 🔧 Forza fullscreen anche qui
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch((err) => {
+          console.warn("Fullscreen error:", err);
+        });
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+
       return;
     }
 
