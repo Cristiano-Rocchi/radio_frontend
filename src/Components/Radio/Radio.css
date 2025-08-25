@@ -1,0 +1,24 @@
+.radio-container:fullscreen .radio-img {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+.radio-container {
+  font-family: "testi", "sans-serif";
+  color: #00ff66;
+}
+.radio-container .titolo {
+  position: absolute;
+  top: 49%;
+  left: 11%;
+}
+.radio-container .artista {
+  position: absolute;
+  top: 70%;
+  left: 11%;
+}
+.radio-container .anno {
+  position: absolute;
+  top: 90%;
+  left: 21.5%;
+}

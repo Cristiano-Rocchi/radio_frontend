@@ -7,6 +7,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Database from "./Components/Control/Database/Database";
 import MyNavbar from "./Components/Navbar/MyNavbar";
 import { SettingsProvider } from "./Components/Settings/SettingsContext";
+import Radio from "./Components/Radio/Radio";
 
 function AppWrapper() {
   const location = useLocation();
@@ -20,6 +21,7 @@ function AppWrapper() {
         <Route path="/playlist" element={<Playlist />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/database" element={<Database />} />
+        <Route path="/radio" element={<Radio />} />
       </Routes>
     </>
   );

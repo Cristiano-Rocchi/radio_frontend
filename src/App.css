@@ -16,6 +16,10 @@
   font-family: "data";
   src: url("./Assets/Font/font5.otf") format("truetype");
 }
+@font-face {
+  font-family: "testi";
+  src: url("./Assets/Font/testi.TTF") format("truetype");
+}
 
 *,
 *::before,
